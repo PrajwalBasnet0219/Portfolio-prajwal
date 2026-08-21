@@ -294,11 +294,11 @@ export default function Footer({ onProjectClick }: FooterProps) {
         </div>
       </div>
 
-      {/* Giant name — ShinyText shine sweep, anchored to the bottom. */}
+      {/* Giant name — ShinyText shine sweep, lifted from bottom */}
       <div
         ref={nameRef}
-        className="relative z-10 w-full pointer-events-none overflow-visible flex items-center justify-center py-6"
-        style={{ minHeight: "clamp(120px, 18vh, 220px)" }}
+        className="relative z-10 w-full pointer-events-none overflow-visible flex items-center justify-center pt-10 pb-16 mt-6"
+        style={{ minHeight: "clamp(100px, 14vh, 160px)" }}
       >
         <div className="w-full text-center leading-none px-4">
           <ShinyText

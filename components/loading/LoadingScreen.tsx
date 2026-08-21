@@ -417,7 +417,7 @@ export default function LoadingScreen({
       <div className="absolute bottom-8 right-8 w-12 h-12 border-r border-b border-fog/10" />
 
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs tracking-[0.2em] text-white/80 uppercase font-mono">
-        {stage === "notice" ? "CLICK TO PROCEED" : "DO NOT INTERRUPT"}
+        {stage !== "notice" ? "DO NOT INTERRUPT" : ""}
       </div>
     </div>
   );

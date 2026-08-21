@@ -17,22 +17,24 @@ export default function CustomCursor() {
     if (!dot || !ring) return;
 
     const gridSelector = ".skill-card, .exp-item, .contact-info-card";
+    const controlSelector = "button, a, input, textarea, [contenteditable]";
 
-    const updateRingForHover = (el: HTMLElement | null) => {
+    const updateRingForHover = (el: HTMLElement | null, isGrid: boolean) => {
       if (!ring) return;
       if (el) {
         const rect = el.getBoundingClientRect();
-        const w = rect.width + 28;
-        const h = rect.height + 28;
-        const radius = "16px";
+        const pad = isGrid ? 14 : 8;
+        const w = rect.width + pad * 2;
+        const h = rect.height + pad * 2;
+        const radius = isGrid ? "16px" : "10px";
         gridHoverSizeRef.current = { w, h, radius };
         isGridHoverRef.current = true;
         hoveredElRef.current = el;
-        // transparent background for rectangle bracket [ (grid box) ] — really fast
+        // transparent background for rectangle bracket [ (grid box) ] or [button/input] — really fast
         ring.style.background = "transparent";
         ring.style.boxShadow = "none";
         ring.style.borderWidth = "1px";
-        ring.style.borderColor = "rgba(221,221,221,0.9)";
+        ring.style.borderColor = isGrid ? "rgba(221,221,221,0.9)" : "rgba(221,221,221,0.85)";
         ring.style.width = `${w}px`;
         ring.style.height = `${h}px`;
         ring.style.borderRadius = radius;
@@ -55,11 +57,18 @@ export default function CustomCursor() {
     const onPointerOver = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
       const gridEl = target.closest(gridSelector) as HTMLElement | null;
-      if (gridEl && gridEl !== hoveredElRef.current) {
-        updateRingForHover(gridEl);
-      } else if (!gridEl && hoveredElRef.current) {
-        const stillOver = target.closest(gridSelector);
-        if (!stillOver) updateRingForHover(null);
+      if (gridEl) {
+        if (gridEl !== hoveredElRef.current) updateRingForHover(gridEl, true);
+        return;
+      }
+      const controlEl = target.closest(controlSelector) as HTMLElement | null;
+      if (controlEl && controlEl !== hoveredElRef.current) {
+        updateRingForHover(controlEl, false);
+        return;
+      }
+      if (hoveredElRef.current) {
+        const stillOver = target.closest(`${gridSelector}, ${controlSelector}`);
+        if (!stillOver) updateRingForHover(null, false);
       }
     };
 

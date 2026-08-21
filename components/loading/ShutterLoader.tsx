@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 const allWords = [
   { text: "Welcome", len: 7 },
   { text: "to", len: 2 },
@@ -8,6 +12,9 @@ const allWords = [
 import styles from "./ShutterLoader.module.css";
 
 export default function ShutterLoader() {
+  const pathname = usePathname();
+  if (pathname !== "/") return null;
+
   return (
     <div className={styles.intro}>
       <div className={styles.curtain} aria-hidden="true">

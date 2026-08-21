@@ -63,36 +63,30 @@ export default function FisheyeCursor({
     let lastEncoded = "";
     let raf = 0;
 
-    // Grid boxes should show BIG bracket covering whole box: [ (grid box) ]
+    // Only grid boxes become rectangle [ (grid box) ]; everything else stays circle
     const gridSelector = ".skill-card, .exp-item, .contact-info-card";
-    const smallRectSelector = "button, a, input, textarea, [contenteditable]";
     const onPointerOver = (e: PointerEvent) => {
       const targetEl = e.target as HTMLElement;
       const gridEl = targetEl?.closest?.(gridSelector) as HTMLElement | null;
-      const smallEl = targetEl?.closest?.(smallRectSelector) as HTMLElement | null;
-      const el = gridEl || smallEl;
-      const isGrid = !!gridEl;
-      const shouldRect = !!el;
+      const shouldRect = !!gridEl;
       const prevRect = isRectRef.current;
       isRectRef.current = shouldRect;
-      hoveredElRef.current = el;
+      hoveredElRef.current = gridEl;
 
-      if (shouldRect && el) {
-        const rect = el.getBoundingClientRect();
+      if (shouldRect && gridEl) {
+        const rect = gridEl.getBoundingClientRect();
         const rootRect = root.getBoundingClientRect();
-        // For grid boxes, bracket covers whole box (+12px padding). For small controls, also cover element but with tighter padding.
-        const padX = isGrid ? 14 : 8;
-        const padY = isGrid ? 14 : 8;
-        const w = rect.width + padX * 2;
-        const h = rect.height + padY * 2;
+        const pad = 14;
+        const w = rect.width + pad * 2;
+        const h = rect.height + pad * 2;
         hoveredRectRef.current = { w, h };
-        // Lock lens to element center (black-hole bends background behind the whole box) — smooth, no snap
+        // Lock lens to grid center — background will bend only outside the rectangle
         target.x = rect.left + rect.width / 2 - rootRect.left;
         target.y = rect.top + rect.height / 2 - rootRect.top;
         if (ringRef.current) {
           ringRef.current.style.width = `${w}px`;
           ringRef.current.style.height = `${h}px`;
-          ringRef.current.style.borderRadius = isGrid ? "16px" : "10px";
+          ringRef.current.style.borderRadius = "16px";
           ringRef.current.style.opacity = "1";
         }
         if (!moved) {
@@ -138,10 +132,6 @@ export default function FisheyeCursor({
       const hovered = hoveredRectRef.current;
       const rectHalfW = hovered ? hovered.w / 2 / mapScale : 80 / mapScale;
       const rectHalfH = hovered ? hovered.h / 2 / mapScale : 22 / mapScale;
-      // border thickness for rectangular black-hole — only border warps background, big radius at edge
-      const borderPx = 36;
-      const innerHalfW = Math.max(0.1, rectHalfW - borderPx / mapScale);
-      const innerHalfH = Math.max(0.1, rectHalfH - borderPx / mapScale);
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           const dx = x - cx;
@@ -155,28 +145,21 @@ export default function FisheyeCursor({
             const ax = Math.abs(dx) / (rectHalfW || 1);
             const ay = Math.abs(dy) / (rectHalfH || 1);
             const outerDist = Math.max(ax, ay);
-            if (outerDist >= 1 || outerDist < 0.0001) {
+            // Only outside the rectangle bends — inside is pure grid content, no background warp
+            // Big radius edge: warp extends ~38% beyond border like air flowing around wall
+            if (outerDist < 1) {
               inside = false;
+            } else if (outerDist < 1.38) {
+              fall = 1 - (outerDist - 1) / 0.38;
+              fall = Math.pow(fall, 1.2);
+              nx = dx / (rectHalfW || 1);
+              ny = dy / (rectHalfH || 1);
+              const nlen = Math.sqrt(nx * nx + ny * ny) || 1;
+              nx /= nlen;
+              ny /= nlen;
+              inside = true;
             } else {
-              const axIn = Math.abs(dx) / (innerHalfW || 1);
-              const ayIn = Math.abs(dy) / (innerHalfH || 1);
-              const innerDist = Math.max(axIn, ayIn);
-              if (innerDist < 1) {
-                // inside hollow center — no warp (border only)
-                inside = false;
-              } else {
-                // in border ring — warp peaks in middle of border thickness
-                const innerThreshold = Math.min(innerHalfW / rectHalfW, innerHalfH / rectHalfH);
-                const t = (outerDist - innerThreshold) / (1 - innerThreshold);
-                const clampedT = Math.max(0, Math.min(1, t));
-                fall = Math.sin(clampedT * Math.PI);
-                nx = dx / (rectHalfW || 1);
-                ny = dy / (rectHalfH || 1);
-                const nlen = Math.sqrt(nx * nx + ny * ny) || 1;
-                nx /= nlen;
-                ny /= nlen;
-                inside = true;
-              }
+              inside = false;
             }
           } else {
             const len = Math.sqrt(dx * dx + dy * dy);
