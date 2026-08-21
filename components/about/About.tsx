@@ -3,30 +3,43 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { 
-  Clapperboard, 
-  Figma, 
-  Palette, 
-  Code2, 
-  FileCode, 
-  Server,
+import {
+  Code2,
+  Figma,
+  Palette,
+  FileCode,
   Video,
-  Layers,
-  Wand2,
-  Monitor
 } from "lucide-react";
 import GlitchText from "../effects/GlitchText";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const skills = [
-  { name: "React / Next.js", level: 60, icon: Code2 },
-  { name: "Linux/Terminal", level: 80, icon: Code2 },
-  { name: "TypeScript", level: 65, icon: FileCode },
-  { name: "Video Editing", level: 95, icon: Video },
-  { name: "Figma", level: 92, icon: Figma },
-  { name: "Node.js", level: 40, icon: Server },
-  { name: "UI/UX Design", level: 88, icon: Layers },
+  {
+    name: "React / Next.js",
+    desc: "Building fast and modern websites.",
+    icon: Code2,
+  },
+  {
+    name: "TypeScript",
+    desc: "Writing clean and reliable code.",
+    icon: FileCode,
+  },
+  {
+    name: "Tailwind CSS",
+    desc: "Styling responsive sites quickly.",
+    icon: Palette,
+  },
+  {
+    name: "Figma",
+    desc: "Designing clean UI layouts.",
+    icon: Figma,
+  },
+  {
+    name: "Video Editing",
+    desc: "Editing engaging videos with CapCut.",
+    icon: Video,
+  },
 ];
 
 const experiences = [
@@ -34,18 +47,19 @@ const experiences = [
     year: "2025 — 2026",
     role: "Video Editor & Graphic Designer",
     company: "Network Education Academy",
+    desc: "Edited videos and designed graphics for educational content.",
   },
   {
     year: "2024 — 2024",
     role: "Web Designer Training",
     company: "Broadway Infosys",
+    desc: "Completed hands-on training in modern web design and development.",
   },
 ];
 
 export default function About() {
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const bioRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
   const expRef = useRef<HTMLDivElement>(null);
 
@@ -66,42 +80,24 @@ export default function About() {
           },
         }
       );
-      
 
-      gsap.fromTo(
-        bioRef.current,
-        { opacity: 0, y: 60 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: bioRef.current,
-            start: "top 80%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-
-      const skillBars = skillsRef.current?.querySelectorAll(".skill-bar");
-      skillBars?.forEach((bar, i) => {
-        const fill = bar.querySelector(".skill-fill");
-        const level = parseInt(bar.getAttribute("data-level") || "0");
-
+      const skillCards = skillsRef.current?.querySelectorAll(".skill-card");
+      skillCards?.forEach((card, i) => {
         gsap.fromTo(
-          fill,
-          { width: "0%" },
+          card,
+          { opacity: 0, y: 30, scale: 0.95 },
           {
-            width: `${level}%`,
-            duration: 1.2,
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
             ease: "power3.out",
             scrollTrigger: {
-              trigger: bar,
-              start: "top 85%",
+              trigger: card,
+              start: "top 90%",
               toggleActions: "play none none reverse",
             },
-            delay: i * 0.1,
+            delay: (i % 3) * 0.1,
           }
         );
       });
@@ -110,10 +106,10 @@ export default function About() {
       expItems?.forEach((item, i) => {
         gsap.fromTo(
           item,
-          { opacity: 0, x: 50 },
+          { opacity: 0, y: 30 },
           {
             opacity: 1,
-            x: 0,
+            y: 0,
             duration: 0.8,
             ease: "power3.out",
             scrollTrigger: {
@@ -134,120 +130,92 @@ export default function About() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative z-10 min-h-screen py-32 px-6 md:px-16 lg:px-24 pl-20 md:pl-24 lg:pl-28 bg-void/40 backdrop-blur-lg"
+      className="relative z-10 min-h-screen py-32 px-6 md:px-16 lg:px-24 bg-void/10 backdrop-blur-sm"
     >
       <div className="section-divider mb-24" />
 
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-start justify-between mb-20">
+        <div className="flex items-start justify-between mb-16">
           <div>
-            <span className="text-xs tracking-[0.5em] text-mist uppercase mb-4 block">
+            <span className="text-xs tracking-[0.5em] text-bone uppercase mb-4 block">
               <GlitchText text="01 — About" as="span" intensity="low" trigger="scroll" />
             </span>
             <h2
               ref={headingRef}
               className="text-5xl md:text-7xl font-light tracking-wider text-pure"
             >
-              <GlitchText text="Prajwal Basnet" as="span" intensity="medium" trigger="scroll" />
+              <GlitchText text="Skills & Expertise" as="span" intensity="medium" trigger="scroll" />
             </h2>
           </div>
 
           <div className="hidden lg:block text-right">
-            <p className="text-[10px] tracking-[0.3em] text-fog/30 uppercase font-mono">
-              <GlitchText text="SYS.ERR_0x4A" as="span" intensity="high" trigger="always" />
+            <p className="text-[10px] tracking-[0.3em] text-bone/60 uppercase font-mono">
+              SYS.READY
             </p>
-            <p className="text-[10px] tracking-[0.3em] text-fog/20 uppercase font-mono mt-1">
-              <GlitchText text="DATA_CORRUPT" as="span" intensity="medium" trigger="always" />
+            <p className="text-[10px] tracking-[0.3em] text-bone/40 uppercase font-mono mt-1">
+              PROFILE_LOADED
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
-          <div ref={bioRef}>
-            <p className="text-lg md:text-xl leading-relaxed text-bone mb-8">
-              I am a creative developer who exists in the space between design and code. 
-              Like static on a dead channel, I corrupt the digital landscape 
-              and craft experiences that glitch in the mind long after the screen fades to black.
-            </p>
-            <p className="text-base leading-relaxed text-ash mb-8">
-              With experience in video editing (CapCut) and graphic design (Figma), I specialize 
-              in creating dark, atmospheric visuals that blur the line between art and technology. 
-              Every pixel is intentional. Every cut tells a story.
-            </p>
-            <p className="text-base leading-relaxed text-ash">
-              When I am not editing, you will find me exploring generative art, experimenting 
-              with motion graphics, or wandering through abandoned places with a camera in hand.
-            </p>
-
-            <div className="grid grid-cols-3 gap-8 mt-16">
-              {[
-                { number: "1+", label: "Years" },
-                { number: "1", label: "Project" },
-                { number: "∞", label: "Ideas" },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <div className="text-3xl md:text-4xl font-light text-pure mb-2">
-                    {stat.number}
+        {/* Skills - 3x3 Grid - FIRST */}
+        <div ref={skillsRef} className="mb-20">
+          <h3 className="text-sm tracking-[0.3em] text-bone uppercase mb-8">
+            <GlitchText text="Skills" as="span" intensity="low" trigger="scroll" />
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {skills.map((skill) => (
+              <div
+                key={skill.name}
+                className="skill-card group relative p-6 bg-transparent border border-pure/15 hover:border-pure/30 transition-all duration-300 hover:bg-pure/[0.04] rounded-2xl overflow-hidden backdrop-blur-sm"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 flex items-center justify-center bg-pure/5 border border-pure/10 group-hover:bg-pure/10 group-hover:border-pure/20 transition-colors duration-300 rounded-xl">
+                    <skill.icon size={18} className="text-pure" />
                   </div>
-                  <div className="text-xs tracking-[0.3em] text-mist uppercase">
-                    {stat.label}
-                  </div>
+                  <h4 className="text-sm md:text-base font-medium text-pure tracking-wide">
+                    {skill.name}
+                  </h4>
                 </div>
-              ))}
-            </div>
+                <p className="text-sm leading-relaxed text-bone">
+                  {skill.desc}
+                </p>
+                {/* subtle corner accent */}
+                <div className="absolute top-0 right-0 w-3 h-3 border-r border-t border-pure/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="space-y-16">
-            <div ref={skillsRef}>
-              <h3 className="text-sm tracking-[0.3em] text-mist uppercase mb-8">
-                <GlitchText text="Capabilities" as="span" intensity="low" trigger="scroll" />
-              </h3>
-              <div className="space-y-6">
-                {skills.map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="skill-bar group"
-                    data-level={skill.level}
-                  >
-                    <div className="flex justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <skill.icon size={14} className="text-mist group-hover:text-pure transition-colors duration-300" />
-                        <span className="text-sm text-bone">{skill.name}</span>
-                      </div>
-                      <span className="text-xs text-mist">{skill.level}%</span>
-                    </div>
-                    <div className="h-px bg-fog/30 relative overflow-hidden">
-                      <div
-                        className="skill-fill absolute top-0 left-0 h-full bg-pure"
-                        style={{ width: "0%" }}
-                      />
-                    </div>
-                  </div>
-                ))}
+        {/* Experience - good box design below */}
+        <div ref={expRef}>
+          <h3 className="text-sm tracking-[0.3em] text-bone uppercase mb-8">
+            <GlitchText text="Experience" as="span" intensity="low" trigger="scroll" />
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {experiences.map((exp) => (
+              <div
+                key={exp.company}
+                className="exp-item group relative p-8 bg-transparent border border-pure/15 hover:border-pure/30 transition-all duration-300 hover:bg-pure/[0.04] rounded-2xl overflow-hidden backdrop-blur-sm"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-2 h-2 bg-pure mt-2 flex-shrink-0" />
+                  <span className="text-xs tracking-[0.2em] text-bone font-mono bg-pure/5 px-3 py-1.5 border border-pure/10">
+                    {exp.year}
+                  </span>
+                </div>
+                <h4 className="text-lg md:text-xl font-light text-pure mb-2 tracking-wide">
+                  {exp.role}
+                </h4>
+                <p className="text-sm tracking-[0.15em] text-bone uppercase mb-3">
+                  {exp.company}
+                </p>
+                <p className="text-sm leading-relaxed text-ash">
+                  {exp.desc}
+                </p>
+                <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-pure/20 via-pure/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
-            </div>
-
-            <div ref={expRef}>
-              <h3 className="text-sm tracking-[0.3em] text-mist uppercase mb-8">
-                <GlitchText text="Experience" as="span" intensity="low" trigger="scroll" />
-              </h3>
-              <div className="space-y-6">
-                {experiences.map((exp) => (
-                  <div
-                    key={exp.company}
-                    className="exp-item group flex items-start justify-between py-4 border-b border-fog/20 hover:border-fog/50 transition-colors duration-300"
-                  >
-                    <div>
-                      <div className="text-pure text-base mb-1">{exp.role}</div>
-                      <div className="text-mist text-sm">{exp.company}</div>
-                    </div>
-                    <div className="text-ash text-xs tracking-wider">
-                      {exp.year}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

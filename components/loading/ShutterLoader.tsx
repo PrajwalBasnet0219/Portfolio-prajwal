@@ -1,9 +1,6 @@
-const stage1Words = [
+const allWords = [
   { text: "Welcome", len: 7 },
   { text: "to", len: 2 },
-];
-
-const stage2Words = [
   { text: "Prajwal", len: 7 },
   { text: "Workspace", len: 9 },
 ];
@@ -22,19 +19,8 @@ export default function ShutterLoader() {
         <div className={`${styles.panel} ${styles.p6}`} />
       </div>
 
-      <h1 className={`${styles.glitchHeading} ${styles.stage1}`}>
-        {stage1Words.map((w, i) => (
-          <span
-            key={w.text}
-            className={styles.word}
-            data-text={w.text}
-            style={{ "--i": i, "--len": w.len } as React.CSSProperties}
-          />
-        ))}
-      </h1>
-
-      <h1 className={`${styles.glitchHeading} ${styles.stage2}`}>
-        {stage2Words.map((w, i) => (
+      <h1 className={`${styles.glitchHeading} ${styles.stageAll}`}>
+        {allWords.map((w, i) => (
           <span
             key={w.text}
             className={styles.word}

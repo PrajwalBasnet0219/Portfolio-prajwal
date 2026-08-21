@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
 import GlitchText from "../effects/GlitchText";
 
@@ -8,32 +8,25 @@ const GLITCH_CHARS = "▓▒░█▄▀■□▪▫◊◦●○◐◑◒◓◔�
 
 const NAMES = ["PRAJWAL BASNET", "प्रज्वल बस्नेत"];
 
-// Next.js static export: image lives at /img/my_pic3.png in public.
-// Kept as a CSS background-image (not an <img>) and shielded from
-// right-click/drag/copy so it can't be saved directly from the page.
-const IMG_SRC = "/img/my_pic3.png";
+function HighlightWord({ children }: { children: string }) {
+  return (
+    <span className="inline-block font-medium text-[#a78bfa]">{children}</span>
+  );
+}
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const glitchLinesRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLDivElement>(null);
-  const [displayName, setDisplayName] = useState(NAMES[0]);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgError, setImgError] = useState(false);
 
   const glitchTransition = useCallback((targetName: string) => {
     if (!nameRef.current) return;
     const el = nameRef.current;
     let iteration = 0;
     const totalIterations = 20;
-
-    setIsTransitioning(true);
 
     const interval = setInterval(() => {
       const progress = iteration / totalIterations;
@@ -54,96 +47,32 @@ export default function Hero() {
       if (iteration > totalIterations) {
         clearInterval(interval);
         el.innerText = targetName;
-        setDisplayName(targetName);
-        setIsTransitioning(false);
       }
     }, 50);
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDisplayName((prev) => {
-        const nextName = prev === NAMES[0] ? NAMES[1] : NAMES[0];
-        glitchTransition(nextName);
-        return prev;
-      });
-    }, 3000);
+      const current = nameRef.current?.innerText || NAMES[0];
+      const nextName = current === NAMES[0] ? NAMES[1] : NAMES[0];
+      glitchTransition(nextName);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [glitchTransition]);
 
-  // Preload the profile picture (a CSS background-image has no load event).
-  useEffect(() => {
-    const img = new Image();
-    img.src = IMG_SRC;
-    img.onload = () => setImgLoaded(true);
-    img.onerror = () => setImgError(true);
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const imgEl = imgRef.current;
-    if (!imgEl || !imgLoaded) return;
-
-    const glitchImage = () => {
-      const intensity = Math.random();
-
-      if (intensity > 0.5) {
-        const offsetX = (Math.random() - 0.5) * 10;
-        const offsetY = (Math.random() - 0.5) * 4;
-
-        imgEl.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(1.05)`;
-        imgEl.style.filter = `grayscale(100%) contrast(1.2) brightness(0.9) hue-rotate(${Math.random() * 30}deg)`;
-
-        const scanline = imgEl.parentElement?.querySelector(".image-scanline") as HTMLElement;
-        if (scanline) {
-          scanline.style.opacity = "0.5";
-          scanline.style.transform = `translateY(${Math.random() * 100}%)`;
-        }
-
-        setTimeout(() => {
-          imgEl.style.transform = "translate(0, 0) scale(1)";
-          imgEl.style.filter = "grayscale(100%) contrast(1.1) brightness(0.9)";
-          if (scanline) {
-            scanline.style.opacity = "0";
-          }
-        }, 80 + Math.random() * 120);
-      } else {
-        imgEl.style.filter = `grayscale(100%) contrast(1.1) brightness(${0.7 + Math.random() * 0.4})`;
-        setTimeout(() => {
-          imgEl.style.filter = "grayscale(100%) contrast(1.1) brightness(0.9)";
-        }, 50);
-      }
-    };
-
-    const glitchInterval = setInterval(() => {
-      glitchImage();
-    }, 2000 + Math.random() * 1000);
-
-    return () => clearInterval(glitchInterval);
-  }, [imgLoaded]);
-
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
-        titleRef.current,
-        { opacity: 0, y: 40 },
-        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
+        leftRef.current,
+        { opacity: 0, x: -40 },
+        { opacity: 1, x: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
       );
 
       gsap.fromTo(
-        imageRef.current,
-        { opacity: 0, scale: 0.9, y: 30 },
-        { opacity: 1, scale: 1, y: 0, duration: 1.4, ease: "power3.out", delay: 0.5 }
-      );
-
-      gsap.fromTo(
-        subtitleRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 1.2 }
+        rightRef.current,
+        { opacity: 0, x: 40 },
+        { opacity: 1, x: 0, duration: 1.2, ease: "power3.out", delay: 0.6 }
       );
 
       const lines = glitchLinesRef.current?.querySelectorAll(".glitch-line");
@@ -156,7 +85,7 @@ export default function Hero() {
             opacity: 1,
             duration: 0.6,
             ease: "power3.out",
-            delay: 0.8 + i * 0.15,
+            delay: 0.8 + i * 0.12,
             transformOrigin: "left center",
           }
         );
@@ -181,13 +110,13 @@ export default function Hero() {
     return () => ctx.revert();
   }, []);
 
-  // Determine image src — for Next.js static export, use root-relative path
-  // next.config.js sets distDir: 'dist', images go to /img/my_pic3.png in public
   return (
     <section
       ref={sectionRef}
-      className="relative z-10 min-h-screen flex flex-col items-center justify-center overflow-hidden pl-20"
+      className="relative z-10 min-h-screen flex flex-col items-center justify-center overflow-hidden pt-16"
     >
+
+
       {/* Glitch lines */}
       <div ref={glitchLinesRef} className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="glitch-line absolute top-[20%] left-0 w-[40%] h-px bg-pure/10" />
@@ -218,138 +147,57 @@ export default function Hero() {
         ))}
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col lg:flex-row items-center justify-center w-full max-w-7xl px-6 gap-12 lg:gap-20">
+      {/* Main content - LEFT / RIGHT split */}
+      <div className="relative z-10 flex flex-col lg:flex-row items-center lg:items-center justify-center w-full max-w-7xl px-6 md:px-10 gap-10 lg:gap-16">
+        {/* LEFT: Hi I'm + Prajwal Basnet */}
+        <div
+          ref={leftRef}
+          className="flex flex-col items-center lg:items-start text-center lg:text-left opacity-0 flex-1 w-full lg:max-w-[60%]"
+        >
+          <p className="text-lg md:text-xl tracking-[0.4em] text-bone uppercase mb-3 font-light">
+            Hi, I&apos;m
+          </p>
 
-        {/* Left: Text */}
-        <div ref={titleRef} className="flex flex-col items-center lg:items-start text-center lg:text-left opacity-0">
           <h1
             ref={nameRef}
-            className="text-5xl md:text-7xl lg:text-8xl font-light tracking-[0.2em] text-pure uppercase"
-            style={{ fontFamily: "'Courier New', monospace", minHeight: "1.2em" }}
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl font-light tracking-[0.14em] text-pure uppercase leading-none overflow-hidden"
+            style={{ fontFamily: "'Courier New', monospace", minHeight: "1.15em" }}
           >
             {NAMES[0]}
           </h1>
 
-          <p
-            ref={subtitleRef}
-            className="mt-6 text-sm md:text-base tracking-[0.5em] text-mist uppercase opacity-0"
-          >
-            <GlitchText
-              text="Video Editor | Graphic Designer | UI/UX Enthusiast"
-              as="span"
-              intensity="low"
-              trigger="hover"
-            />
-          </p>
+          <div className="mt-6 flex items-center gap-3 lg:justify-start justify-center">
+            <div className="w-12 h-px bg-pure/30" />
+            <div className="w-6 h-px bg-pure/15" />
+          </div>
 
-          <div className="mt-8 w-px h-16 bg-gradient-to-b from-fog/50 via-fog/20 to-transparent lg:ml-0 mx-auto" />
-
-          <p className="mt-4 text-[10px] tracking-[0.3em] text-fog/40 uppercase">
-            <GlitchText
-              text="Based in Kathmandu, Nepal"
-              as="span"
-              intensity="medium"
-              trigger="always"
-            />
+          <p className="mt-5 text-xs md:text-sm tracking-[0.3em] text-bone uppercase">
+            Based in Kathmandu, Nepal
           </p>
         </div>
 
-        {/* Right: Profile picture */}
-        <div ref={imageRef} className="relative opacity-0">
-          <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
-            {/* Outer glitch borders */}
-            <div
-              className="absolute -inset-3 border border-fog/20"
-              style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%)" }}
-            />
-            <div
-              className="absolute -inset-3 border border-fog/10 translate-x-1 translate-y-1"
-              style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%)" }}
-            />
-
-            {/* Image container */}
-            <div
-              className="relative w-full h-full overflow-hidden bg-ghost"
-              style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%)" }}
-            >
-              {!imgError ? (
-                <div
-                  ref={imgRef}
-                  role="img"
-                  aria-label="Prajwal Basnet"
-                  className="absolute inset-0 w-full h-full transition-all duration-75"
-                  style={{
-                    backgroundImage: `url(${IMG_SRC})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    filter: "grayscale(100%) contrast(1.1) brightness(0.9)",
-                    transform: "scale(1)",
-                    userSelect: "none",
-                    WebkitUserSelect: "none",
-                    WebkitTouchCallout: "none",
-                  }}
-                  onContextMenu={(e) => e.preventDefault()}
-                  onCopy={(e) => e.preventDefault()}
-                  onCut={(e) => e.preventDefault()}
-                  onDragStart={(e) => e.preventDefault()}
-                />
-              ) : (
-                /* Fallback: stylised placeholder when image missing */
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-ghost/80 gap-4">
-                  <div className="text-[10px] tracking-[0.4em] text-fog/40 uppercase font-mono">
-                    IMG_NOT_FOUND
-                  </div>
-                  <div className="w-16 h-px bg-fog/20" />
-                  <div className="text-[9px] tracking-[0.3em] text-fog/20 font-mono">
-                    /public/img/my_pic3.png
-                  </div>
-                </div>
-              )}
-
-              {/* Interaction shield: blocks right-click save, drag and copy
-                  even if the pointer lands slightly off the image. */}
-              <div
-                className="absolute inset-0"
-                onContextMenu={(e) => e.preventDefault()}
-                onCopy={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onDragStart={(e) => e.preventDefault()}
-              />
-
-              {/* Moving scanline */}
-              <div
-                className="image-scanline absolute left-0 right-0 h-[20%] pointer-events-none opacity-0 transition-opacity duration-75"
-                style={{
-                  background: "linear-gradient(transparent 50%, rgba(0,0,0,0.4) 50%)",
-                  backgroundSize: "100% 4px",
-                  top: "0",
-                }}
-              />
-
-              {/* Static scanline overlay */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)",
-                }}
-              />
-
-              {/* Vignette */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ boxShadow: "inset 0 0 60px rgba(0,0,0,0.8)" }}
-              />
-            </div>
-
-            {/* Corner decorations */}
-            <div className="absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 border-pure/30" />
-            <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-pure/30" />
-
-            {/* Data label */}
-            <div className="absolute -bottom-8 right-0 text-[10px] tracking-[0.2em] text-fog/40 uppercase font-mono">
-              IMG_0x01.DAT
+        {/* RIGHT: Short bio - contained so glitch doesn't break layout */}
+        <div
+          ref={rightRef}
+          className="opacity-0 w-full lg:max-w-[440px] flex-shrink-0"
+        >
+          <div className="relative overflow-hidden rounded-2xl bg-ghost/30 border border-pure/10 backdrop-blur-md p-6 md:p-8">
+            {/* subtle top accent */}
+            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-pure/15 to-transparent" />
+            <p className="text-[11px] tracking-[0.32em] text-bone/70 uppercase mb-3 font-mono">
+              — ABOUT
+            </p>
+            <p className="text-base md:text-[17px] leading-relaxed text-pure font-light">
+              <HighlightWord>Software Engineer</HighlightWord> crafting modern, responsive web experiences.
+              Passionate about <HighlightWord>web development</HighlightWord>, design, and{" "}
+              <HighlightWord>video editing</HighlightWord> — blending clean code with creative visuals.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-bone">
+              Fast, functional, and refined — from concept to final cut.
+            </p>
+            <div className="mt-6 flex items-center gap-2 text-[10px] tracking-[0.2em] text-mist uppercase">
+              <span className="w-1.5 h-1.5 bg-pure/60 rounded-full animate-pulse" />
+              Available for new projects
             </div>
           </div>
         </div>
@@ -360,17 +208,17 @@ export default function Hero() {
         ref={scrollIndicatorRef}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-0 z-10"
       >
-        <span className="text-xs tracking-[0.3em] text-mist uppercase">
-          <GlitchText text="Descend" as="span" intensity="low" trigger="hover" />
+        <span className="text-xs tracking-[0.3em] text-bone uppercase">
+          Descend
         </span>
-        <div className="w-px h-8 bg-gradient-to-b from-mist to-transparent" />
+        <div className="w-px h-8 bg-gradient-to-b from-bone to-transparent" />
       </div>
 
       {/* Corner frames */}
-      <div className="absolute top-8 left-28 w-16 h-16 border-l border-t border-fog/20" />
-      <div className="absolute top-8 right-8 w-16 h-16 border-r border-t border-fog/20" />
-      <div className="absolute bottom-8 left-28 w-16 h-16 border-l border-b border-fog/20" />
-      <div className="absolute bottom-8 right-8 w-16 h-16 border-r border-b border-fog/20" />
+      <div className="absolute top-20 left-8 w-16 h-16 border-l border-t border-pure/15" />
+      <div className="absolute top-20 right-8 w-16 h-16 border-r border-t border-pure/15" />
+      <div className="absolute bottom-8 left-8 w-16 h-16 border-l border-b border-pure/15" />
+      <div className="absolute bottom-8 right-8 w-16 h-16 border-r border-b border-pure/15" />
     </section>
   );
 }

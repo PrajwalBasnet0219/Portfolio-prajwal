@@ -176,7 +176,7 @@ export default function ContactPage() {
       <CustomCursor />
       <NoiseOverlay />
 
-      <div className="relative z-10 pl-20 md:pl-24 lg:pl-28">
+      <div className="relative z-10 pt-16">
         <div className="max-w-5xl mx-auto px-6 md:px-16 py-32 min-h-screen flex flex-col justify-center">
           <div className="mb-16">
             <span className="text-xs tracking-[0.5em] text-mist uppercase mb-4 block">
@@ -202,7 +202,7 @@ export default function ContactPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div className="space-y-8">
-              <div className="border border-fog/30 p-6">
+              <div className="contact-info-card border border-fog/30 p-6 rounded-xl">
                 <div className="flex items-center gap-3 mb-3">
                   <Github size={18} className="text-pure" />
                   <span className="text-xs tracking-[0.3em] text-mist uppercase">
@@ -224,7 +224,7 @@ export default function ContactPage() {
                 </a>
               </div>
 
-              <div className="border border-fog/30 p-6">
+              <div className="contact-info-card border border-fog/30 p-6 rounded-xl">
                 <div className="flex items-center gap-3 mb-3">
                   <Mail size={18} className="text-pure" />
                   <span className="text-xs tracking-[0.3em] text-mist uppercase">
@@ -244,7 +244,7 @@ export default function ContactPage() {
                 </a>
               </div>
 
-              <p className="text-sm text-fog/60 leading-relaxed tracking-wider font-mono">
+              <p className="text-sm text-white leading-relaxed tracking-wider font-mono" style={{ textShadow: "0 0 8px rgba(255,255,255,0.15)" }}>
                 {"> sys.init('message_channel')"}
                 <br />
                 {"$ open_transmission --port 0219"}

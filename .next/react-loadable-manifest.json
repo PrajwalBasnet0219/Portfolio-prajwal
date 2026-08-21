@@ -1,23 +1,21 @@
 {
   "app/page.tsx -> @/components/about/About": {
-    "id": 5759,
+    "id": "app/page.tsx -> @/components/about/About",
     "files": [
-      "static/chunks/759.aabb88a61932fd0b.js"
+      "static/chunks/_app-pages-browser_components_about_About_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/layout/Footer": {
-    "id": 9605,
+    "id": "app/page.tsx -> @/components/layout/Footer",
     "files": [
-      "static/css/ec621fcb8b3474d7.css",
-      "static/chunks/744-111a5bbb4e01dc8a.js",
-      "static/chunks/713.ad8de90cd6173be5.js",
-      "static/chunks/605.774c2ca34f3cd8ca.js"
+      "static/css/_app-pages-browser_components_layout_Footer_tsx.css",
+      "static/chunks/_app-pages-browser_components_layout_Footer_tsx.js"
     ]
   },
   "app/page.tsx -> @/components/project/Project": {
-    "id": 9555,
+    "id": "app/page.tsx -> @/components/project/Project",
     "files": [
-      "static/chunks/555.b3324ec67d39826e.js"
+      "static/chunks/_app-pages-browser_components_project_Project_tsx.js"
     ]
   }
 }

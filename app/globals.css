@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -33,7 +33,7 @@ body {
   font-family: 'Courier New', monospace;
   overflow: hidden;
   animation: unlockScroll 0.01s linear forwards;
-  animation-delay: 6.9s;
+  animation-delay: 5.0s;
 }
 @keyframes unlockScroll {
   to { overflow: visible; }
@@ -63,16 +63,18 @@ body {
   position: fixed;
   pointer-events: none;
   z-index: 9998;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
-  transition: transform 0.15s ease, width 0.3s ease, height 0.3s ease;
+  background: transparent;
+  border: 1px solid rgba(221, 221, 221, 0.35);
+  box-shadow: none;
+  transition: transform 0.12s ease-out, width 0.14s cubic-bezier(0.2, 0.9, 0.2, 1), height 0.14s cubic-bezier(0.2, 0.9, 0.2, 1), border-radius 0.14s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
 .cursor-ring.hovering {
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
+  background: transparent;
+  border-color: rgba(221, 221, 221, 0.55);
+  box-shadow: none;
 }
 
 /* Noise overlay */

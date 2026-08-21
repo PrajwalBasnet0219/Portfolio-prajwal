@@ -122,41 +122,27 @@ export default function LoadingScreen({
     }, 40);
   }, []);
 
-  // Stage machine: NOTICE (glitch word) -> scramble "ATTEMPTING TO LOAD.."
-  // -> percentage counter -> COMPLETE (then navigate / fade out).
+  // Stage machine: NOTICE -> scramble "ATTEMPTING TO LOAD.." -> COMPLETE (fast, no 0-100%)
   useEffect(() => {
     const noticeTimer = setTimeout(() => {
       setStage("loading");
       const targetText = `ATTEMPTING TO LOAD ${pageLabel} PAGE...`;
       scrambleText(targetText, () => {
         setTimeout(() => {
-          setStage("progress");
-          let p = 0;
-          const iv = setInterval(() => {
-            p = Math.min(MAX_PERCENT, p + Math.ceil(Math.random() * 5) + 2);
-            setPercent(p);
-            if (p >= MAX_PERCENT) {
-              clearInterval(iv);
-              setSubText(`${pageLabel} PAGE LOADED — 100%`);
-              setTimeout(() => {
-                setStage("complete");
-                setTimeout(() => {
-                  if (!hasNavigated.current) {
-                    hasNavigated.current = true;
-                    setAnimDone(true);
-                    // Navigate while the screen still fully covers the
-                    // viewport so the previous page never flashes through.
-                    if (autoNavigate) {
-                      router.push(target);
-                    }
-                  }
-                }, 1500);
-              }, 600);
+          setSubText(`${pageLabel} PAGE LOADED`);
+          setStage("complete");
+          setTimeout(() => {
+            if (!hasNavigated.current) {
+              hasNavigated.current = true;
+              setAnimDone(true);
+              if (autoNavigate) {
+                router.push(target);
+              }
             }
-          }, 85);
-        }, 200);
+          }, 700);
+        }, 350);
       });
-    }, 1500);
+    }, 700);
 
     return () => clearTimeout(noticeTimer);
   }, [pageLabel, target, router, autoNavigate, scrambleText]);
@@ -376,28 +362,26 @@ export default function LoadingScreen({
           </svg>
         </div>
 
-        <div className="text-center">
-          {stage === "notice" ? (
-            <h1
-              className={styles.notice}
-              data-text="NOTICE"
-              style={{
-                fontSize: "clamp(2.5rem, 6vw, 4rem)",
-                fontFamily: "'Courier New', monospace",
-              }}
-            >
-              NOTICE
-            </h1>
-          ) : (
-            <p
-              className="text-sm md:text-base tracking-[0.2em] text-mist uppercase font-mono"
-              style={{ minHeight: "1.5em" }}
-            >
-              {stage === "progress"
-                ? `${pageLabel} PAGE IS LOADING ${percent}%`
-                : subText}
-            </p>
-          )}
+          <div className="text-center">
+            {stage === "notice" ? (
+              <h1
+                className={styles.notice}
+                data-text="NOTICE"
+                style={{
+                  fontSize: "clamp(2.5rem, 6vw, 4rem)",
+                  fontFamily: "'Courier New', monospace",
+                }}
+              >
+                NOTICE
+              </h1>
+            ) : (
+              <p
+                className="text-base md:text-lg tracking-[0.25em] text-white uppercase font-mono"
+                style={{ minHeight: "1.5em", textShadow: "0 0 12px rgba(255,255,255,0.25)" }}
+              >
+                {subText}
+              </p>
+            )}
         </div>
 
         <div className="mt-6 flex items-center gap-2">
@@ -409,7 +393,7 @@ export default function LoadingScreen({
               opacity: stage === "notice" ? 0.3 : 1,
             }}
           />
-          <span className="text-[10px] tracking-[0.3em] text-fog/40 uppercase font-mono">
+          <span className="text-xs tracking-[0.3em] text-white uppercase font-mono">
             {statusLabel}
           </span>
         </div>
@@ -419,13 +403,8 @@ export default function LoadingScreen({
             <div
               className="absolute top-0 left-0 h-full bg-red-500/60"
               style={{
-                width:
-                  stage === "complete"
-                    ? "100%"
-                    : stage === "progress"
-                      ? `${percent}%`
-                      : "60%",
-                transition: "width 0.2s ease",
+                width: stage === "complete" ? "100%" : "60%",
+                transition: "width 0.3s ease",
               }}
             />
           </div>
@@ -437,7 +416,7 @@ export default function LoadingScreen({
       <div className="absolute bottom-8 left-8 w-12 h-12 border-l border-b border-fog/10" />
       <div className="absolute bottom-8 right-8 w-12 h-12 border-r border-b border-fog/10" />
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] tracking-[0.2em] text-fog/30 uppercase font-mono">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs tracking-[0.2em] text-white/80 uppercase font-mono">
         {stage === "notice" ? "CLICK TO PROCEED" : "DO NOT INTERRUPT"}
       </div>
     </div>

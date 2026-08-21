@@ -115,7 +115,7 @@ export default function Footer({ onProjectClick }: FooterProps) {
     <footer
       ref={sectionRef}
       id="contact"
-      className="relative z-10 min-h-screen flex flex-col overflow-hidden bg-void pl-20 md:pl-24 lg:pl-28"
+      className="relative z-10 min-h-screen flex flex-col overflow-hidden bg-void"
       onMouseMove={handleMouseMove}
     >
       {/* Strands background — wrapped in FisheyeCursor so the lens warps it
@@ -294,13 +294,10 @@ export default function Footer({ onProjectClick }: FooterProps) {
         </div>
       </div>
 
-      {/* Giant name — ShinyText shine sweep, anchored to the bottom.
-           Uses w-screen with negative margin to counter the footer's left
-           padding (pl-20 / pl-24 / pl-28) so the full "Prajwal Basnet"
-           stays centered in the viewport and never gets clipped on the right. */}
+      {/* Giant name — ShinyText shine sweep, anchored to the bottom. */}
       <div
         ref={nameRef}
-        className="relative z-10 w-screen -ml-20 md:-ml-24 lg:-ml-28 pointer-events-none overflow-visible flex items-center justify-center py-6"
+        className="relative z-10 w-full pointer-events-none overflow-visible flex items-center justify-center py-6"
         style={{ minHeight: "clamp(120px, 18vh, 220px)" }}
       >
         <div className="w-full text-center leading-none px-4">
@@ -308,7 +305,7 @@ export default function Footer({ onProjectClick }: FooterProps) {
             text="Prajwal Basnet"
             speed={3}
             spread={150}
-            color="#666666"
+            color="#bbbbbb"
             shineColor="#ffffff"
             yoyo
             className="font-mono font-extrabold tracking-[-0.05em] leading-[0.85] whitespace-nowrap text-[clamp(2.4rem,8.5vw,8.5rem)]"

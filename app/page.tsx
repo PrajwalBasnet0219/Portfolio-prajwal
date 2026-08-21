@@ -7,7 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CustomCursor from "@/components/cursor/CustomCursor";
 import NoiseOverlay from "@/components/background/NoiseOverlay";
 import Navigation from "@/components/layout/Navigation";
-import ColorBends from "@/components/background/ColorBends";
+import WavyRippleBackground from "@/components/lightswind/wavy-ripple-background";
 import FisheyeCursor from "@/components/cursor/FisheyeCursor";
 import Hero from "@/components/hero/Hero";
 import { useNav } from "@/components/layout/NavigationGate";
@@ -43,8 +43,30 @@ export default function Home() {
     });
     gsap.ticker.lagSmoothing(0);
 
+    // Slide-up + blur-to-clear on scroll for main sections
+    const reveals = gsap.utils.toArray<HTMLElement>(".reveal");
+    reveals.forEach((el) => {
+      gsap.fromTo(
+        el,
+        { y: 80, autoAlpha: 0, filter: "blur(10px)" },
+        {
+          y: 0,
+          autoAlpha: 1,
+          filter: "blur(0px)",
+          duration: 1.1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 88%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    });
+
     return () => {
       lenis.destroy();
+      ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   }, []);
 
@@ -56,34 +78,35 @@ export default function Home() {
         <CustomCursor />
         <NoiseOverlay />
         <Navigation />
-        <FisheyeCursor className="fixed inset-0 z-0 pointer-events-none">
-          <ColorBends
+        <FisheyeCursor className="fixed inset-0 z-0 pointer-events-none" strength={180} radius={520} damping={0.14}>
+          <WavyRippleBackground
             className="absolute inset-0"
-            transparent
-            speed={0.22}
-            scale={1}
-            frequency={1.15}
-            warpStrength={1}
-            mouseInfluence={0.6}
-            parallax={0.3}
-            noise={0.05}
-            iterations={1}
-            intensity={1.2}
-            bandWidth={6}
-            colors={["#dddddd", "#888888", "#3a3a3a", "#7a0e18"]}
+            waveColor="#5b21b6"
+            backgroundColor="#05010a"
+            speed={0.9}
+            frequency={3.2}
+            ringSharpness={0.6}
+            maxOpacity={0.55}
           />
+          <div className="absolute inset-0 bg-void/25" />
         </FisheyeCursor>
         <div className="scanline" />
         <Hero />
-        <Suspense fallback={<SectionFallback />}>
-          <About />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <Project onProjectClick={handleProjectClick} />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
-          <Footer onProjectClick={handleProjectClick} />
-        </Suspense>
+        <div className="reveal">
+          <Suspense fallback={<SectionFallback />}>
+            <About />
+          </Suspense>
+        </div>
+        <div className="reveal">
+          <Suspense fallback={<SectionFallback />}>
+            <Project onProjectClick={handleProjectClick} />
+          </Suspense>
+        </div>
+        <div className="reveal">
+          <Suspense fallback={<SectionFallback />}>
+            <Footer onProjectClick={handleProjectClick} />
+          </Suspense>
+        </div>
       </main>
     </>
   );

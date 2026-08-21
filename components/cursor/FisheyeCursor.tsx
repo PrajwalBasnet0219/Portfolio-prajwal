@@ -49,6 +49,9 @@ export default function FisheyeCursor({
   const ringRef = useRef<HTMLDivElement>(null);
   const rawId = useId();
   const filterId = `fisheye-${rawId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const isRectRef = useRef(false);
+  const hoveredElRef = useRef<HTMLElement | null>(null);
+  const hoveredRectRef = useRef<{ w: number; h: number } | null>(null);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -59,6 +62,58 @@ export default function FisheyeCursor({
     let moved = false;
     let lastEncoded = "";
     let raf = 0;
+
+    // Grid boxes should show BIG bracket covering whole box: [ (grid box) ]
+    const gridSelector = ".skill-card, .exp-item, .contact-info-card";
+    const smallRectSelector = "button, a, input, textarea, [contenteditable]";
+    const onPointerOver = (e: PointerEvent) => {
+      const targetEl = e.target as HTMLElement;
+      const gridEl = targetEl?.closest?.(gridSelector) as HTMLElement | null;
+      const smallEl = targetEl?.closest?.(smallRectSelector) as HTMLElement | null;
+      const el = gridEl || smallEl;
+      const isGrid = !!gridEl;
+      const shouldRect = !!el;
+      const prevRect = isRectRef.current;
+      isRectRef.current = shouldRect;
+      hoveredElRef.current = el;
+
+      if (shouldRect && el) {
+        const rect = el.getBoundingClientRect();
+        const rootRect = root.getBoundingClientRect();
+        // For grid boxes, bracket covers whole box (+12px padding). For small controls, also cover element but with tighter padding.
+        const padX = isGrid ? 14 : 8;
+        const padY = isGrid ? 14 : 8;
+        const w = rect.width + padX * 2;
+        const h = rect.height + padY * 2;
+        hoveredRectRef.current = { w, h };
+        // Lock lens to element center (black-hole bends background behind the whole box) — smooth, no snap
+        target.x = rect.left + rect.width / 2 - rootRect.left;
+        target.y = rect.top + rect.height / 2 - rootRect.top;
+        if (ringRef.current) {
+          ringRef.current.style.width = `${w}px`;
+          ringRef.current.style.height = `${h}px`;
+          ringRef.current.style.borderRadius = isGrid ? "16px" : "10px";
+          ringRef.current.style.opacity = "1";
+        }
+        if (!moved) {
+          moved = true;
+          current.x = target.x;
+          current.y = target.y;
+          rebuild();
+          updateRing();
+        }
+      } else if (!shouldRect && prevRect) {
+        hoveredRectRef.current = null;
+        hoveredElRef.current = null;
+        if (ringRef.current) {
+          ringRef.current.style.width = `${radius * 2}px`;
+          ringRef.current.style.height = `${radius * 2}px`;
+          ringRef.current.style.borderRadius = "50%";
+        }
+      }
+    };
+    window.addEventListener("pointerover", onPointerOver);
+    window.addEventListener("pointerout", onPointerOver);
 
     const canvas = mapRef.current;
 
@@ -79,23 +134,67 @@ export default function FisheyeCursor({
       const cy = current.y / mapScale;
       const r = radius / mapScale;
 
+      const isRect = isRectRef.current;
+      const hovered = hoveredRectRef.current;
+      const rectHalfW = hovered ? hovered.w / 2 / mapScale : 80 / mapScale;
+      const rectHalfH = hovered ? hovered.h / 2 / mapScale : 22 / mapScale;
+      // border thickness for rectangular black-hole — only border warps background, big radius at edge
+      const borderPx = 36;
+      const innerHalfW = Math.max(0.1, rectHalfW - borderPx / mapScale);
+      const innerHalfH = Math.max(0.1, rectHalfH - borderPx / mapScale);
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           const dx = x - cx;
           const dy = y - cy;
-          const len = Math.sqrt(dx * dx + dy * dy);
           const i = (y * w + x) * 4;
-          if (len >= r || len < 0.0001) {
+          let fall = 0;
+          let nx = 0;
+          let ny = 0;
+          let inside = false;
+          if (isRect) {
+            const ax = Math.abs(dx) / (rectHalfW || 1);
+            const ay = Math.abs(dy) / (rectHalfH || 1);
+            const outerDist = Math.max(ax, ay);
+            if (outerDist >= 1 || outerDist < 0.0001) {
+              inside = false;
+            } else {
+              const axIn = Math.abs(dx) / (innerHalfW || 1);
+              const ayIn = Math.abs(dy) / (innerHalfH || 1);
+              const innerDist = Math.max(axIn, ayIn);
+              if (innerDist < 1) {
+                // inside hollow center — no warp (border only)
+                inside = false;
+              } else {
+                // in border ring — warp peaks in middle of border thickness
+                const innerThreshold = Math.min(innerHalfW / rectHalfW, innerHalfH / rectHalfH);
+                const t = (outerDist - innerThreshold) / (1 - innerThreshold);
+                const clampedT = Math.max(0, Math.min(1, t));
+                fall = Math.sin(clampedT * Math.PI);
+                nx = dx / (rectHalfW || 1);
+                ny = dy / (rectHalfH || 1);
+                const nlen = Math.sqrt(nx * nx + ny * ny) || 1;
+                nx /= nlen;
+                ny /= nlen;
+                inside = true;
+              }
+            }
+          } else {
+            const len = Math.sqrt(dx * dx + dy * dy);
+            if (len < r && len >= 0.0001) {
+              fall = 1 - len / r;
+              nx = dx / len;
+              ny = dy / len;
+              inside = true;
+            }
+          }
+          if (!inside) {
             data[i] = 128;
             data[i + 1] = 128;
             data[i + 2] = 0;
             data[i + 3] = 255;
             continue;
           }
-          const fall = 1 - len / r;
-          const s = fall * fall * 128;
-          const nx = dx / len;
-          const ny = dy / len;
+          const s = fall * fall * (isRect ? 145 : 128);
           data[i] = 128 - Math.round(nx * s);
           data[i + 1] = 128 - Math.round(ny * s);
           data[i + 2] = 0;
@@ -117,6 +216,8 @@ export default function FisheyeCursor({
     };
 
     const onMove = (e: PointerEvent) => {
+      // When hovering a grid box, lens is locked to the box center (big bracket), not cursor
+      if (isRectRef.current && hoveredElRef.current) return;
       // Map the cursor to the lens root's local coordinates so the lens
       // follows the pointer correctly even when the root isn't the viewport
       // (e.g. a FisheyeCursor scoped to the footer).
@@ -152,6 +253,8 @@ export default function FisheyeCursor({
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerover", onPointerOver);
+      window.removeEventListener("pointerout", onPointerOver);
     };
   }, [damping, mapScale, radius]);
 
@@ -191,7 +294,7 @@ export default function FisheyeCursor({
         <div
           ref={ringRef}
           className="fisheye-ring"
-style={{
+ style={{
               position: "absolute",
               left: 0,
               top: 0,
@@ -199,7 +302,7 @@ style={{
               height: radius * 2,
               borderColor: ringColor,
               opacity: 0,
-              transition: "opacity 0.4s ease",
+              transition: "opacity 0.3s ease, width 0.14s cubic-bezier(0.2,0.9,0.2,1), height 0.14s cubic-bezier(0.2,0.9,0.2,1), border-radius 0.14s ease",
             }}
         />
       )}
