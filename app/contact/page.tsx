@@ -415,7 +415,7 @@ export default function ContactPage() {
                   )}
                 </div>
 
-                <p className="mt-2 text-[10px] tracking-[0.15em] text-fog/30 font-mono">
+                <p className="mt-2 text-xs tracking-[0.15em] text-white font-mono">
                   Highlight text to apply formatting · Images are optional · Fixed 88×88 preview
                 </p>
               </div>

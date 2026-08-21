@@ -325,7 +325,7 @@ export default function ProjectPage() {
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-bone uppercase tracking-wider text-xs">Role</span>
-                                    <span className="text-pure text-xs text-right">{project.id === 1 ? "Video Editor" : "Frontend Developer"}</span>
+                                    <span className="text-pure text-xs text-right">Web Developer</span>
                                   </div>
                                 </div>
                               </div>
