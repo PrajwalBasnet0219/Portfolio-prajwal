@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import gsap from "gsap";
+import { useNav } from "./NavigationGate";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Mail,
@@ -45,6 +46,23 @@ export default function Footer({ onProjectClick }: FooterProps) {
   const columnsRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const { navigate } = useNav();
+  const pathname = usePathname();
+
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+    label: string
+  ) => {
+    // Hash links (e.g. /#about) should scroll, not trigger loading screen
+    if (href.includes("#")) return;
+    if (pathname === href) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    navigate(href, label.toLowerCase());
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -175,9 +193,10 @@ export default function Footer({ onProjectClick }: FooterProps) {
               <ul className="space-y-4">
                 {navLinks.map((link) => (
                   <li key={link.label}>
-                    <Link
+                    <a
                       href={link.href}
-                      className="group inline-flex items-center gap-3 text-pure text-base hover:text-glow transition-colors duration-300"
+                      onClick={(e) => handleNavClick(e, link.href, link.label)}
+                      className="group inline-flex items-center gap-3 text-pure text-base hover:text-glow transition-colors duration-300 cursor-pointer"
                       data-cursor-hover
                     >
                       <link.icon
@@ -185,7 +204,7 @@ export default function Footer({ onProjectClick }: FooterProps) {
                         className="text-mist group-hover:text-pure group-hover:translate-x-0.5 transition-all duration-300"
                       />
                       <span>{link.label}</span>
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -275,13 +294,16 @@ export default function Footer({ onProjectClick }: FooterProps) {
         </div>
       </div>
 
-      {/* Giant name — ShinyText shine sweep, anchored to the bottom. */}
+      {/* Giant name — ShinyText shine sweep, anchored to the bottom.
+           Uses w-screen with negative margin to counter the footer's left
+           padding (pl-20 / pl-24 / pl-28) so the full "Prajwal Basnet"
+           stays centered in the viewport and never gets clipped on the right. */}
       <div
         ref={nameRef}
-        className="relative z-10 w-full pointer-events-none overflow-hidden"
-        style={{ height: "clamp(150px, 22vh, 240px)" }}
+        className="relative z-10 w-screen -ml-20 md:-ml-24 lg:-ml-28 pointer-events-none overflow-visible flex items-center justify-center py-6"
+        style={{ minHeight: "clamp(120px, 18vh, 220px)" }}
       >
-        <div className="w-full text-center leading-none">
+        <div className="w-full text-center leading-none px-4">
           <ShinyText
             text="Prajwal Basnet"
             speed={3}
@@ -289,7 +311,7 @@ export default function Footer({ onProjectClick }: FooterProps) {
             color="#666666"
             shineColor="#ffffff"
             yoyo
-            className="font-mono font-extrabold tracking-[-0.05em] leading-[0.85] text-[clamp(4rem,16vw,15rem)]"
+            className="font-mono font-extrabold tracking-[-0.05em] leading-[0.85] whitespace-nowrap text-[clamp(2.4rem,8.5vw,8.5rem)]"
           />
         </div>
       </div>
