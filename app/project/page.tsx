@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ExternalLink, Github, ArrowLeft, Play, PawPrint, ShoppingCart, Sparkles, Globe, Plane, Building2, Footprints, ChevronDown } from "lucide-react";
+import { ExternalLink, Github, ArrowLeft, Play, PawPrint, ShoppingCart, Sparkles, Globe, Plane, Building2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import GlitchText from "@/components/effects/GlitchText";
 import CustomCursor from "@/components/cursor/CustomCursor";
@@ -78,27 +78,6 @@ const projects = [
     video: "",
     image: "",
     liveUrl: "https://nbswebpr.netlify.app/",
-    githubUrl: "#",
-  },
-  {
-    id: 4,
-    title: "Ultima Kicks",
-    shortName: "Ultima Kicks",
-    category: "E-Commerce Showcase",
-    year: "2024",
-    description:
-      "A frictional shoes showcase site built with HTML and CSS only. Displays products with a bold, modern layout and interactive styling.",
-    longDescription:
-      "Ultima Kicks is a frontend e-commerce concept for shoes, made with HTML and CSS while mastering layouts and styling. It presents product grids, featured items, and a clean shopping-inspired UI — no backend, just pure frontend craft.",
-    tags: [
-      { name: "HTML", icon: Globe },
-      { name: "CSS", icon: Sparkles },
-      { name: "E-Commerce", icon: ShoppingCart },
-      { name: "Showcase", icon: Footprints },
-    ],
-    video: "",
-    image: "",
-    liveUrl: "https://ulitma-frictional-shoes.netlify.app/",
     githubUrl: "#",
   },
 ];
@@ -274,7 +253,6 @@ export default function ProjectPage() {
                           <div className="w-14 h-14 rounded-full border border-pure/20 flex items-center justify-center mb-4 bg-pure/[0.04]">
                             {project.id === 2 && <Plane size={22} className="text-pure/70" />}
                             {project.id === 3 && <Building2 size={22} className="text-pure/70" />}
-                            {project.id === 4 && <Footprints size={22} className="text-pure/70" />}
                           </div>
                           <p className="text-xs tracking-[0.3em] text-pure uppercase">{project.title}</p>
                         </div>
