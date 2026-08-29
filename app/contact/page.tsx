@@ -170,7 +170,7 @@ export default function ContactPage() {
           typeCount={typeCount}
         />
       </FisheyeCursor>
-      <div className="fixed inset-0 z-[1] pointer-events-none bg-void/60 backdrop-blur-md" />
+      <div className="fixed inset-0 z-[1] pointer-events-none bg-void/32 backdrop-blur-[6px]" />
       <div className="fixed inset-0 z-[1] pointer-events-none scanline" />
 
       <CustomCursor />
@@ -343,7 +343,7 @@ export default function ContactPage() {
                     />
                   </label>
 
-                  <span className="text-[10px] tracking-[0.2em] text-fog/40 uppercase font-mono ml-1 hidden sm:inline">
+                  <span className="text-[10px] tracking-[0.2em] text-white uppercase font-mono ml-1 hidden sm:inline">
                     select text → apply
                   </span>
 
