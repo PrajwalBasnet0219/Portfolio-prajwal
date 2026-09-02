@@ -1,0 +1,29 @@
+{
+  "[project]/components/project/Project.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/project/Project.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/node_modules_three_build_three_core_996ef05a.js",
+      "static/chunks/node_modules_three_build_three_module_0c59ee63.js",
+      "static/chunks/node_modules_b20b9778._.js",
+      "static/chunks/components_4ef06706._.js",
+      "static/chunks/components_project_Project_tsx_377fc2da._.js"
+    ]
+  },
+  "[project]/components/about/About.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/about/About.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_background_LightTunnel_tsx_634db18c._.js",
+      "static/chunks/_3dcc6997._.js",
+      "static/chunks/components_about_About_tsx_377fc2da._.js"
+    ]
+  },
+  "[project]/components/layout/Footer.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/layout/Footer.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/node_modules_016c80cd._.js",
+      "static/chunks/components_a0b66556._.js",
+      "static/chunks/components_4174aaa3._.css",
+      "static/chunks/components_layout_Footer_tsx_377fc2da._.js"
+    ]
+  }
+}

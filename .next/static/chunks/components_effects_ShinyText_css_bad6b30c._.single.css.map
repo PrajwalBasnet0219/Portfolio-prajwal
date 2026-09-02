@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/components/effects/ShinyText.css"],"sourcesContent":[".shiny-text {\n  color: #b5b5b5a4; /* Adjust this color to change intensity/style */\n  background: linear-gradient(\n    120deg,\n    rgba(255, 255, 255, 0) 40%,\n    rgba(255, 255, 255, 0.8) 50%,\n    rgba(255, 255, 255, 0) 60%\n  );\n  background-size: 200% 100%;\n  -webkit-background-clip: text;\n  background-clip: text;\n  display: inline-block;\n  animation: shine 5s linear infinite;\n}\n\n@keyframes shine {\n  0% {\n    background-position: 100%;\n  }\n  100% {\n    background-position: -100%;\n  }\n}\n\n.shiny-text.disabled {\n  animation: none;\n}\n"],"names":[],"mappings":"AAAA;;;;;;;;;AAeA;;;;;;;;;;AASA"}}]
+}

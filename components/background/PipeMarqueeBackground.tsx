@@ -26,6 +26,7 @@ const DEFAULT_GIFS = ["/img/p1.png", "/img/p2.png", "/img/anubis.gif"];
 
 // 8 tiles/face → 128 imgs (8 faces * 8 * 2) — covers face width, original was 12 → 192
 const TILES_PER_FACE = 8;
+const getTilesPerFace = () => (typeof window !== "undefined" && window.innerWidth < 768 ? 5 : TILES_PER_FACE);
 
 export default function PipeMarqueeBackground({
   count = 8,
@@ -121,13 +122,11 @@ export default function PipeMarqueeBackground({
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden bg-[#050508] flex items-center justify-center ${className ?? ""}`}
+      className={`absolute inset-0 overflow-hidden bg-transparent flex items-center justify-center ${className ?? ""}`}
       style={{ contain: "layout paint" }}
     >
-      <div className="pointer-events-none absolute inset-0 bg-radial from-white/[0.04] via-transparent to-transparent opacity-60" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black via-transparent to-black/80" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
-      <div className="absolute w-[900px] h-[400px] bg-indigo-600/20 blur-[90px] rounded-full -rotate-12 will-change-transform" />
+      <div className="pointer-events-none absolute inset-0 bg-radial from-white/[0.03] via-transparent to-transparent opacity-40" />
+      <div className="absolute w-[900px] h-[400px] bg-indigo-600/10 blur-[90px] rounded-full -rotate-12 will-change-transform opacity-50" />
 
       <div
         className="absolute inset-0 flex items-center justify-center"
@@ -172,7 +171,8 @@ export default function PipeMarqueeBackground({
                 const duration = speed + (faceIdx % 3) * 4 - (faceIdx % 2) * 3;
                 const reverse = faceIdx % 2 === 1;
                 const brightness = 1 - Math.abs(faceIdx - count / 2) * 0.09;
-                const tiles = Array.from({ length: TILES_PER_FACE }).map((__, idx) => GIFS[idx % GIFS.length]);
+                const tilesPerFace = getTilesPerFace();
+                const tiles = Array.from({ length: tilesPerFace }).map((__, idx) => GIFS[idx % GIFS.length]);
 
                 return (
                   <div
@@ -221,7 +221,8 @@ export default function PipeMarqueeBackground({
                             const skew = ((tileHash % 7) - 3) * 0.9;
                             const sliceTop = (tileHash * 13) % 78;
 
-                            const hBias = Math.abs(idx - (TILES_PER_FACE - 1) / 2) / ((TILES_PER_FACE - 1) / 2);
+                            const tilesPerFaceInner = getTilesPerFace();
+                            const hBias = Math.abs(idx - (tilesPerFaceInner - 1) / 2) / ((tilesPerFaceInner - 1) / 2);
                             const bendY = hBias * 1.4;
                             const bendX = 3.2;
                             return (
@@ -237,7 +238,7 @@ export default function PipeMarqueeBackground({
                                   transform: shouldGlitch
                                     ? `translate3d(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px, 0) perspective(520px) rotateY(${bendY.toFixed(2)}deg) rotateX(${bendX}deg)`
                                     : `perspective(520px) rotateY(${bendY.toFixed(2)}deg) rotateX(${bendX}deg)`,
-                                  transformOrigin: idx < TILES_PER_FACE / 2 ? "left center" : "right center",
+                                  transformOrigin: idx < tilesPerFaceInner / 2 ? "left center" : "right center",
                                   transformStyle: "preserve-3d",
                                   boxShadow: shouldGlitch
                                     ? "0 0 0 rgba(0,0,0,0)"

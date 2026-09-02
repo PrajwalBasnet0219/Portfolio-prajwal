@@ -1,0 +1,39 @@
+/* [project]/components/effects/ShinyText.css [app-client] (css) */
+.shiny-text {
+  color: rgba(181, 181, 181, .643);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .8) 50%, rgba(255, 255, 255, 0) 60%) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: 5s linear infinite shine;
+  display: inline-block;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 100%;
+  }
+
+  100% {
+    background-position: -100%;
+  }
+}
+
+.shiny-text.disabled {
+  animation: none;
+}
+
+/* [project]/components/background/Strands.css [app-client] (css) */
+.strands-container {
+  background: none;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.strands-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/*# sourceMappingURL=components_4174aaa3._.css.map*/

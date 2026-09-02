@@ -107,20 +107,21 @@ export default function WavyRippleBackground({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Create OGL context
-    const renderer = new Renderer({ alpha: true, antialias: true });
+    const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches);
+    // Mobile: lower DPR + pause when offscreen saves GPU/battery
+    const dpr = isMobile ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, 1.5);
+    const renderer = new Renderer({ alpha: true, antialias: !isMobile, dpr });
     const gl = renderer.gl;
     
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    // Dynamic full viewport geometry
     const geometry = new Triangle(gl);
     if (geometry.attributes.uv) delete geometry.attributes.uv;
 
-    // Create shader program
     const program = new Program(gl, {
       vertex: VERTEX_SHADER,
       fragment: FRAGMENT_SHADER,
@@ -143,7 +144,6 @@ export default function WavyRippleBackground({
     const mesh = new Mesh(gl, { geometry, program });
     container.appendChild(gl.canvas);
 
-    // Handle resizing
     const resize = () => {
       const w = container.offsetWidth;
       const h = container.offsetHeight;
@@ -154,9 +154,13 @@ export default function WavyRippleBackground({
     resize();
 
     let animationId: number;
+    let isVisible = true;
+    const io = new IntersectionObserver(([e]) => { isVisible = e.isIntersecting; }, { threshold: 0 });
+    io.observe(container);
+
     const animate = (time: number) => {
       animationId = requestAnimationFrame(animate);
-
+      if (!isVisible || document.hidden) return;
       program.uniforms.uTime.value = time * 0.001;
       program.uniforms.uWaveColor.value = (() => {
         const c = new Color(waveColor);
@@ -171,8 +175,12 @@ export default function WavyRippleBackground({
     };
     animate(0);
 
+    const onVis = () => { /* resume */ };
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelAnimationFrame(animationId);
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("resize", resize);
       if (gl.canvas.parentNode === container) {
         container.removeChild(gl.canvas);

@@ -3,6 +3,9 @@
 import { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
 import GlitchText from "../effects/GlitchText";
+import WavyRippleBackground from "../lightswind/wavy-ripple-background";
+import FisheyeCursor from "../cursor/FisheyeCursor";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const GLITCH_CHARS = "▓▒░█▄▀■□▪▫◊◦●○◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯";
 
@@ -21,6 +24,7 @@ export default function Hero() {
   const nameRef = useRef<HTMLHeadingElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const glitchLinesRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const glitchTransition = useCallback((targetName: string) => {
     if (!nameRef.current) return;
@@ -113,9 +117,21 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative z-10 min-h-screen flex flex-col items-center justify-center overflow-hidden pt-16"
+      className="relative z-10 min-h-screen flex flex-col items-center justify-center overflow-hidden pt-16 bg-void"
     >
-
+      {/* WavyRipple background — only for hero (moved from app/page.tsx) */}
+      <FisheyeCursor className="absolute inset-0 z-0 pointer-events-none" strength={110} radius={360} damping={0.14}>
+        <WavyRippleBackground
+          className="absolute inset-0"
+          waveColor="#5b21b6"
+          backgroundColor="#05010a"
+          speed={0.9}
+          frequency={3.2}
+          ringSharpness={0.6}
+          maxOpacity={0.55}
+        />
+        <div className="absolute inset-0 bg-void/25" />
+      </FisheyeCursor>
 
       {/* Glitch lines */}
       <div ref={glitchLinesRef} className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -129,14 +145,14 @@ export default function Hero() {
         <div className="glitch-line absolute bottom-[10%] left-[60%] w-px h-[20%] bg-pure/5" />
       </div>
 
-      {/* Floating particles */}
+      {/* Floating particles — fewer on mobile for perf */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: isMobile ? 4 : 12 }).map((_, i) => (
           <div
             key={i}
             className="particle"
             style={{
-              left: `${(i * 8.3) % 100}%`,
+              left: `${(i * (isMobile ? 22 : 8.3)) % 100}%`,
               animation: `float-up ${10 + (i % 5) * 3}s linear infinite`,
               animationDelay: `${(i % 4) * 2}s`,
               width: `${1 + (i % 2)}px`,

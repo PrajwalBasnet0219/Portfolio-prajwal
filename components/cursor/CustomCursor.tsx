@@ -12,6 +12,8 @@ export default function CustomCursor() {
   const gridHoverSizeRef = useRef<{ w: number; h: number; radius: string } | null>(null);
 
   useEffect(() => {
+    // Disable custom cursor on touch/mobile — native cursor + save CPU/battery
+    if (typeof window !== "undefined" && (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768)) return;
     const dot = dotRef.current;
     const ring = ringRef.current;
     if (!dot || !ring) return;

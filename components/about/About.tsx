@@ -11,6 +11,10 @@ import {
   Video,
 } from "lucide-react";
 import GlitchText from "../effects/GlitchText";
+import FisheyeCursor from "../cursor/FisheyeCursor";
+import dynamic from "next/dynamic";
+
+const LightTunnel = dynamic(() => import("@/components/background/LightTunnel"), { ssr: false });
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -130,8 +134,39 @@ export default function About() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative z-10 min-h-screen py-32 px-6 md:px-16 lg:px-24 bg-void/10 backdrop-blur-sm"
+      className="relative z-10 min-h-screen py-32 px-6 md:px-16 lg:px-24 bg-black overflow-hidden isolate"
     >
+      {/* LightTunnel background — slow + fisheye, from @react-bits/LightTunnel-JS-CSS in /components/background */}
+      <FisheyeCursor
+        className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
+        strength={110}
+        radius={360}
+        damping={0.14}
+      >
+        <LightTunnel
+          cableColor="#5b21b6"
+          pulseColor="#a78bfa"
+          tunnelColor="#0a0a0a"
+          tunnelOpacity={0.35}
+          speed={0.22}
+          flowDirection="outward"
+          pulseSpeed={0.6}
+          pulseLength={0.32}
+          pulseWidth={0.85}
+          cableCount={18}
+          thickness={0.32}
+          rimWidth={0.12}
+          waviness={0.22}
+          sway={0.28}
+          size={1.05}
+          glow={0.9}
+          fadeNear={0.45}
+          fadeFar={2.1}
+          brightness={0.95}
+          opacity={0.9}
+        />
+        <div className="absolute inset-0 bg-black/35" />
+      </FisheyeCursor>
       <div className="section-divider mb-24" />
 
       <div className="max-w-7xl mx-auto">

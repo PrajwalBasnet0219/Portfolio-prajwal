@@ -15,7 +15,7 @@
  * A faint glowing ring marks the lens edge so the light-bending is visible.
  */
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 export interface FisheyeCursorProps {
   className?: string;
@@ -52,8 +52,18 @@ export default function FisheyeCursor({
   const isRectRef = useRef(false);
   const hoveredElRef = useRef<HTMLElement | null>(null);
   const hoveredRectRef = useRef<{ w: number; h: number } | null>(null);
+  const [isEnabled, setIsEnabled] = useState(true);
 
   useEffect(() => {
+    const check = () => window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768 || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setIsEnabled(!check());
+    const onResize = () => setIsEnabled(!check());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isEnabled) return;
     const root = rootRef.current;
     if (!root) return;
 
@@ -239,7 +249,15 @@ export default function FisheyeCursor({
       window.removeEventListener("pointerover", onPointerOver);
       window.removeEventListener("pointerout", onPointerOver);
     };
-  }, [damping, mapScale, radius]);
+  }, [damping, mapScale, radius, isEnabled]);
+
+  if (!isEnabled) {
+    return (
+      <div ref={rootRef} className={className} style={{ overflow: "hidden" }}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div

@@ -13,7 +13,6 @@ import {
   ArrowUpRight,
   Folder,
   Home,
-  User,
   Send,
 } from "lucide-react";
 import GlitchText from "../effects/GlitchText";
@@ -33,7 +32,6 @@ const socials = [
 
 const navLinks = [
   { label: "Home", href: "/", icon: Home },
-  { label: "About Me", href: "/#about", icon: User },
   { label: "Contact", href: "/contact", icon: Send },
 ];
 

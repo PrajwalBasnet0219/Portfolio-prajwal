@@ -6,6 +6,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight, Folder } from "lucide-react";
 import GlitchText from "../effects/GlitchText";
 import PipeMarqueeBackground from "../background/PipeMarqueeBackground";
+import EtherWaves from "@/components/lightswind/ether-waves";
+import FisheyeCursor from "../cursor/FisheyeCursor";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -45,7 +47,24 @@ export default function Project({ onProjectClick }: ProjectProps) {
       id="project"
       className="relative z-10 min-h-[70vh] py-32 px-6 md:px-16 lg:px-24 overflow-hidden flex items-center"
     >
-      {/* Pipe 3D marquee background — no fisheye */}
+      {/* EtherWaves background — back of pipe, fisheye only on ether-waves */}
+      <FisheyeCursor
+        className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
+        strength={110}
+        radius={360}
+        damping={0.14}
+      >
+        <EtherWaves
+          className="absolute inset-0"
+          interactive={false}
+          parallax={false}
+          animationSpeed={0.9}
+          linesGradient={["#5b21b6", "#7c3aed", "#a78bfa"]}
+          transparentBg={true}
+        />
+      </FisheyeCursor>
+
+      {/* Pipe 3D marquee background — kept front, not removed, no fisheye */}
       <PipeMarqueeBackground count={8} radius={185} rotateSpeed={32} glitchIntensity="strong" className="absolute inset-0 z-0" />
 
       {/* Subtle dim — no background blur, reduced for perf */}
