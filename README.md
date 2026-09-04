@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4" alt="Tailwind" />
 </p>
 
-**Live Demo →** `https://your-vercel-url.vercel.app` <!-- replace with your deployment URL -->
+**Live Demo →** https://portfolio-prajwal-basnet.vercel.app/
 
 ---
 
