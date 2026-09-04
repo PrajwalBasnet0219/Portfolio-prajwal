@@ -1,128 +1,137 @@
-# Rei Kuozaki Portfolio
+# Prajwal Basnet — Portfolio
 
-A dark, atmospheric portfolio with interactive eyes that follow your cursor, smooth scrolling, and haunting animations.
+> A dark, atmospheric personal portfolio — built to feel like a presence is watching. Eyes that follow your cursor, fog that reveals, and smooth cinematic motion throughout.
 
-## ⚠️ Node.js Version Note
+<p align="center">
+  <a href="https://github.com/PrajwalBasnet0219/Portfolio-prajwal"><img src="https://img.shields.io/github/stars/PrajwalBasnet0219/Portfolio-prajwal?style=flat" alt="stars" /></a>
+  <img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6" alt="TS" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4" alt="Tailwind" />
+</p>
 
-This project works best with **Node.js 20.x or 22.x LTS**. If you see the warning:
+**Live Demo →** `https://your-vercel-url.vercel.app` <!-- replace with your deployment URL -->
+
+---
+
+## Preview
+
+> Add a screenshot or GIF here for best first impression on GitHub
+
+```md
+![Hero Preview](public/preview.png)
 ```
-[DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
-```
 
-This is a **harmless warning** from Node.js 26+ internal APIs used by Next.js / Tailwind CSS v4. It does not affect functionality. To suppress it:
-
-```bash
-# Option 1: Use Node 22 (recommended)
-nvm use 22
-
-# Option 2: Suppress the warning
-NODE_OPTIONS='--no-deprecation' npm run dev
-
-# Option 3: It will be fixed automatically in future Next.js releases
-```
+---
 
 ## Features
 
-- **Interactive Eyes** — Two glowing eyes that track your cursor movement across the entire page
-- **Terror Entity** — Eyes beside your name in the hero, like a dark entity watching
-- **Fog Eyes** — Eyes that emerge from fog as you scroll from hero to about section
-- **Smooth Scrolling** — Powered by Lenis for buttery-smooth scroll experience
-- **GSAP Animations** — Scroll-triggered reveals, parallax effects, and staggered animations
-- **Custom Cursor** — Minimalist dot + ring cursor with hover states
-- **Noise & Vignette Overlay** — Atmospheric film grain and edge darkening
-- **Scanline Effect** — Subtle CRT-style scanline animation
-- **Floating Particles** — Ambient particles drifting upward
-- **Tendril SVG Animation** — Dark branching lines that sway and draw themselves in
-- **Responsive Design** — Works on all screen sizes
+- **Interactive Eyes** — cursor-tracking eyes (`bright` / `dim` / `fog` / `terror` variants)
+- **Fog Reveal** — eyes emerge from fog on scroll between Hero → About
+- **Smooth Scroll** — Lenis with GSAP ScrollTrigger reveals + blur transitions
+- **Atmosphere** — Noise, vignette, scanlines, floating particles, tendril SVG
+- **Custom Cursor** — dot + ring with hover states (auto-disabled on mobile)
+- **Fully Responsive** — mobile-first, respects `prefers-reduced-motion`
 
-## Pages/Sections
-
-1. **Hero** — Full-screen intro with name + terror entity eyes beside it
-2. **Fog Eyes** — Eyes emerging from deep fog as you scroll down
-3. **About** — Bio, skills with animated bars, experience timeline, decorative eyes
-4. **Projects** — 6 project cards with hover effects, image zoom, and tag system
-5. **Contact/Footer** — CTA with giant eyes, social links, mouse-following gradient
+Sections: **Hero** → **About** (skills/bio/timeline) → **Projects** → **Contact / Footer**
 
 ## Tech Stack
 
-- Next.js 15 (App Router)
-- React 19
-- TypeScript
-- Tailwind CSS v4
-- GSAP + ScrollTrigger
-- Lenis (smooth scroll)
-- Lucide React (icons)
+| Layer | Tools |
+|-------|-------|
+| Framework | Next.js 15 (App Router), React 19, TypeScript |
+| Styling | Tailwind CSS v4, `tw-animate-css`, `lightswind` |
+| Animation | GSAP + ScrollTrigger, Lenis, Framer Motion |
+| 3D / Effects | Three.js, @react-three/fiber, OGL |
+| UI | shadcn/ui, lucide-react, class-variance-authority |
 
-## Getting Started
+## Quick Start
 
 ```bash
-# Use Node 22 (recommended)
+# 1. clone
+git clone https://github.com/PrajwalBasnet0219/Portfolio-prajwal.git
+cd Portfolio-prajwal
+
+# 2. install (Node 20 or 22 LTS recommended)
 nvm use 22
+npm install --legacy-peer-deps
 
-# Install dependencies
-npm install
-
-# Run development server
+# 3. run
 npm run dev
-
-# Build for production
-npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the site.
+Open `http://localhost:3000`
+
+```bash
+npm run build # production build
+npm start     # serve production
+npm run lint  # lint
+```
 
 ## Project Structure
 
 ```
 app/
-  globals.css      # Global styles, animations, custom properties
-  layout.tsx       # Root layout with metadata
-  page.tsx         # Main page with Lenis + GSAP setup
+  layout.tsx      # root layout + metadata + fonts (Geist)
+  page.tsx        # Lenis + GSAP setup, section reveals
+  globals.css     # design tokens + animations
+  api/            # route handlers
 components/
-  CustomCursor.tsx # Custom cursor dot + ring
-  NoiseOverlay.tsx # Noise texture + vignette overlay
-  Navigation.tsx   # Fixed nav that appears on scroll
-  Eyes.tsx         # The interactive eyes component (4 variants)
-  FogEyes.tsx      # Eyes that emerge from fog on scroll
-  Tendrils.tsx     # SVG tendril animations
-  Hero.tsx         # Hero section with terror entity
-  About.tsx        # About section with skills
-  Projects.tsx     # Projects grid
-  Footer.tsx       # Contact CTA + footer
+  hero/           # Hero + terror entity
+  about/          # About, skills, timeline
+  project/        # Project grid & cards
+  layout/         # Navigation, Footer, NavigationGate
+  cursor/         # CustomCursor
+  background/     # NoiseOverlay, vignette
+  effects/        # Eyes (4 variants), FogEyes, Tendrils
+  loading/        # ShutterLoader
+  ui/             # shadcn primitives
+public/           # static assets
 ```
 
-## Eye Variants
-
-The `Eyes` component supports 4 visual variants:
-
-| Variant | Description | Use Case |
-|---------|-------------|----------|
-| `bright` | Full white glow | Default, high visibility |
-| `dim` | Reduced glow, gray pupil | Subtle decorative eyes |
-| `fog` | Very dim, barely visible | Eyes in fog/mist |
-| `terror` | Menacing with red aura | Hero entity, dangerous feel |
+### Eyes Component
 
 ```tsx
+import Eyes from "@/components/effects/Eyes";
+
 <Eyes
-  size={320}          // Total width of both eyes
-  gap={50}            // Space between eyes
-  eyeSize={110}       // Diameter of each eye
-  pupilSize={38}      // Diameter of pupil
-  glowIntensity={1.2} // Glow brightness multiplier
-  variant="terror"    // bright | dim | fog | terror
+  size={320}
+  gap={50}
+  eyeSize={110}
+  pupilSize={38}
+  glowIntensity={1.2}
+  variant="terror" // bright | dim | fog | terror
 />
 ```
 
-## Colors
+## Customization
 
-All colors are defined in `globals.css` as CSS custom properties:
-- `--color-void` — Pure black (#000)
-- `--color-abyss` — Near black (#050505)
-- `--color-shadow` — Dark gray (#0a0a0a)
-- `--color-pure` — Dim white (#999)
-- `--color-danger` — Dark red tint (#1a0505)
-- `--color-blood` — Blood red (#2a0a0a)
+- **Colors / Theme:** edit CSS variables in `app/globals.css` (`--color-void`, `--color-abyss`, etc.)
+- **Content:** update `components/about/About.tsx` and `components/project/Project.tsx`
+- **Metadata:** `app/layout.tsx:12` — `title` / `description`
+- **Images:** set `next.config.js:8` `unoptimized: true` is for static export; remove if using Next Image Optimization
+
+## Deployment
+
+Deploys cleanly to Vercel (see `vercel.json:1`):
+
+```bash
+vercel --prod
+```
+
+Or any Node host that supports Next.js 15.
+
+## FAQ
+
+**DeprecationWarning `module.register()` on Node 24/26?**
+Harmless warning from Next/Tailwind internals. Use Node 22 LTS or run with `NODE_OPTIONS='--no-deprecation' npm run dev` (already set in `package.json:9`). Fixed upstream in future Next.js releases.
+
+## Author
+
+**Prajwal Basnet** — [@PrajwalBasnet0219](https://github.com/PrajwalBasnet0219)
+
+---
 
 ## License
 
-MIT
+MIT — free to fork, just keep attribution.
