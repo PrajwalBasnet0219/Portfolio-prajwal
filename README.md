@@ -1,6 +1,6 @@
 # Prajwal Basnet — Portfolio
 
-> A dark, atmospheric personal portfolio — built to feel like a presence is watching. Eyes that follow your cursor, fog that reveals, and smooth cinematic motion throughout.
+> A dark, atmospheric personal portfolio — fisheye lens distortion, smooth cinematic scroll, and immersive background effects.
 
 <p align="center">
   <a href="https://github.com/PrajwalBasnet0219/Portfolio-prajwal"><img src="https://img.shields.io/github/stars/PrajwalBasnet0219/Portfolio-prajwal?style=flat" alt="stars" /></a>
@@ -14,22 +14,12 @@
 
 ---
 
-## Preview
-
-> Add a screenshot or GIF here for best first impression on GitHub
-
-```md
-![Hero Preview](public/preview.png)
-```
-
----
-
 ## Features
 
-- **Interactive Eyes** — cursor-tracking eyes (`bright` / `dim` / `fog` / `terror` variants)
-- **Fog Reveal** — eyes emerge from fog on scroll between Hero → About
+- **Fisheye Lens** — cursor-following warp that distorts backgrounds (`components/cursor/FisheyeCursor.tsx`)
+- **Atmospheric Backgrounds** — LightTunnel, EtherWaves, Strands, Lightfall, FaultyTerminal
 - **Smooth Scroll** — Lenis with GSAP ScrollTrigger reveals + blur transitions
-- **Atmosphere** — Noise, vignette, scanlines, floating particles, tendril SVG
+- **Atmosphere** — Noise, vignette, scanlines, floating particles
 - **Custom Cursor** — dot + ring with hover states (auto-disabled on mobile)
 - **Fully Responsive** — mobile-first, respects `prefers-reduced-motion`
 
@@ -81,27 +71,22 @@ components/
   about/          # About, skills, timeline
   project/        # Project grid & cards
   layout/         # Navigation, Footer, NavigationGate
-  cursor/         # CustomCursor
-  background/     # NoiseOverlay, vignette
-  effects/        # Eyes (4 variants), FogEyes, Tendrils
+  cursor/         # FisheyeCursor + CustomCursor
+  background/     # NoiseOverlay, LightTunnel, Strands, etc.
+  effects/        # ShinyText, GlitchText, WarpText
   loading/        # ShutterLoader
   ui/             # shadcn primitives
-public/           # static assets
+  public/           # static assets
 ```
 
-### Eyes Component
+### FisheyeCursor
 
 ```tsx
-import Eyes from "@/components/effects/Eyes";
+import FisheyeCursor from "@/components/cursor/FisheyeCursor";
 
-<Eyes
-  size={320}
-  gap={50}
-  eyeSize={110}
-  pupilSize={38}
-  glowIntensity={1.2}
-  variant="terror" // bright | dim | fog | terror
-/>
+<FisheyeCursor strength={110} radius={360} damping={0.14}>
+  <YourBackgroundOrSection />
+</FisheyeCursor>
 ```
 
 ## Customization
