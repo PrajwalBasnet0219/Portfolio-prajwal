@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
-import GlitchText from "../effects/GlitchText";
 import WavyRippleBackground from "../lightswind/wavy-ripple-background";
 import FisheyeCursor from "../cursor/FisheyeCursor";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -55,11 +54,13 @@ export default function Hero() {
     }, 50);
   }, []);
 
+  const nameIndexRef = useRef(0);
   useEffect(() => {
     const interval = setInterval(() => {
-      const current = nameRef.current?.innerText || NAMES[0];
-      const nextName = current === NAMES[0] ? NAMES[1] : NAMES[0];
-      glitchTransition(nextName);
+      // Track the index ourselves — reading innerText mid-scramble could
+      // resolve to a glitched string and pick the wrong next name.
+      nameIndexRef.current = (nameIndexRef.current + 1) % NAMES.length;
+      glitchTransition(NAMES[nameIndexRef.current]);
     }, 10000);
 
     return () => clearInterval(interval);
@@ -176,7 +177,7 @@ export default function Hero() {
 
           <h1
             ref={nameRef}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-8xl font-light tracking-[0.14em] text-pure uppercase leading-none overflow-hidden"
+            className="font-light tracking-[0.08em] md:tracking-[0.14em] text-pure uppercase leading-none whitespace-nowrap text-[clamp(1.75rem,8.5vw,8rem)]"
             style={{ fontFamily: "'Courier New', monospace", minHeight: "1.15em" }}
           >
             {NAMES[0]}

@@ -233,7 +233,7 @@ export default function ContactPage() {
                 </div>
                 <a
                   href={`mailto:${EMAIL}`}
-                  className="inline-flex items-center gap-2 text-lg text-pure hover:text-glow transition-colors duration-300 group"
+                  className="inline-flex items-center gap-2 text-base md:text-lg text-pure hover:text-glow transition-colors duration-300 group break-all"
                   data-cursor-hover
                 >
                   {EMAIL}
@@ -370,8 +370,8 @@ export default function ContactPage() {
                   className="hidden"
                 />
 
-                {/* Editor + fixed-size previews on the right */}
-                <div className="flex gap-3">
+                {/* Editor + fixed-size previews (stacked on mobile) */}
+                <div className="flex flex-col sm:flex-row gap-3">
                   <div
                     ref={editorRef}
                     contentEditable
@@ -385,7 +385,7 @@ export default function ContactPage() {
 
                   {/* Fixed-size preview column — right of textarea, doesn't break layout */}
                   {imagePreviews.length > 0 && (
-                    <div className="w-[88px] shrink-0 flex flex-col gap-2">
+                    <div className="w-full sm:w-[88px] shrink-0 flex flex-row sm:flex-col gap-2">
                       {imagePreviews.map((src, idx) => (
                         <div
                           key={`${images[idx]?.name}-${idx}`}

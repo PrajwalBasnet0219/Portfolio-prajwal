@@ -236,7 +236,9 @@ const Lightfall: React.FC<LightfallProps> = ({
     if (!container) return;
 
     const renderer = new Renderer({
-      dpr: dpr ?? (typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1),
+      // Cap DPR: fullscreen fragment shader at 3-4x phone DPR would tank
+      // low-end GPUs for zero visible gain on soft light streaks.
+      dpr: dpr ?? (typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 1.5) : 1),
       alpha: true,
       antialias: true,
     });

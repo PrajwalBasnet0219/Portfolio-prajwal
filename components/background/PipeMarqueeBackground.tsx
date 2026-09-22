@@ -10,7 +10,7 @@ type PipeMarqueeBackgroundProps = {
   autoRotate?: boolean;
   glitch?: boolean;
   glitchIntensity?: "subtle" | "strong";
-  /** GIF paths — edit here when you swap gifs. Defaults to 3 gifs in /public/img */
+  /** Tile image paths — edit here when you swap images. Defaults to 3 images in /public/img */
   gifs?: string[];
   className?: string;
 };
@@ -22,7 +22,7 @@ type PipeMarqueeBackgroundProps = {
  * -> Uses 8 tiles/face (optimized from 12) → 128 imgs vs 192, still covers width (2976 > 1900) no gap, faster
  * -> Gifs: /public/img — edit DEFAULT_GIFS below
  */
-const DEFAULT_GIFS = ["/img/p1.png", "/img/p2.png", "/img/anubis.gif"];
+const DEFAULT_GIFS = ["/img/p1.png", "/img/p2.png", "/img/Anubis.png"];
 
 // 8 tiles/face → 128 imgs (8 faces * 8 * 2) — covers face width, original was 12 → 192
 const TILES_PER_FACE = 8;
@@ -255,6 +255,11 @@ export default function PipeMarqueeBackground({
                                   loading="lazy"
                                   decoding="async"
                                   fetchPriority="low"
+                                  onError={(e) => {
+                                    // Missing asset: keep the tile's dark
+                                    // background instead of a broken icon.
+                                    e.currentTarget.style.opacity = "0";
+                                  }}
                                   style={
                                     shouldGlitch
                                       ? {

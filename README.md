@@ -18,7 +18,7 @@
 
 - **Fisheye Lens** — cursor-following warp that distorts backgrounds (`components/cursor/FisheyeCursor.tsx`)
 - **Atmospheric Backgrounds** — LightTunnel, EtherWaves, Strands, Lightfall, FaultyTerminal
-- **Smooth Scroll** — Lenis with GSAP ScrollTrigger reveals + blur transitions
+- **Smooth Scroll** — Lenis with GSAP ScrollTrigger reveals (compositor-only transforms)
 - **Atmosphere** — Noise, vignette, scanlines, floating particles
 - **Custom Cursor** — dot + ring with hover states (auto-disabled on mobile)
 - **Fully Responsive** — mobile-first, respects `prefers-reduced-motion`
@@ -65,18 +65,19 @@ app/
   layout.tsx      # root layout + metadata + fonts (Geist)
   page.tsx        # Lenis + GSAP setup, section reveals
   globals.css     # design tokens + animations
-  api/            # route handlers
+  global-error.tsx# branded crash fallback
+  api/contact/    # contact form → Gmail delivery
 components/
-  hero/           # Hero + terror entity
+  hero/           # Hero
   about/          # About, skills, timeline
   project/        # Project grid & cards
-  layout/         # Navigation, Footer, NavigationGate
+  layout/         # Navigation, Footer, NavigationGate, IntroScrollLock
   cursor/         # FisheyeCursor + CustomCursor
   background/     # NoiseOverlay, LightTunnel, Strands, etc.
-  effects/        # ShinyText, GlitchText, WarpText
-  loading/        # ShutterLoader
+  effects/        # ShinyText, GlitchText, SolvingOrb
+  loading/        # ShutterLoader, LoadingScreen (network-aware progress)
   ui/             # shadcn primitives
-  public/           # static assets
+public/           # static assets
 ```
 
 ### FisheyeCursor
@@ -110,6 +111,10 @@ Or any Node host that supports Next.js 15.
 
 **DeprecationWarning `module.register()` on Node 24/26?**
 Harmless warning from Next/Tailwind internals. Use Node 22 LTS or run with `NODE_OPTIONS='--no-deprecation' npm run dev` (already set in `package.json:9`). Fixed upstream in future Next.js releases.
+
+## Credits
+
+- Solving-orb animation math adapted from [`thinking-orbs`](https://github.com/RareFormLabs/thinking-orbs) (MIT © Jakub Antalik).
 
 ## Author
 

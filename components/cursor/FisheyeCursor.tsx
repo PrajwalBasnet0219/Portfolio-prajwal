@@ -70,8 +70,11 @@ export default function FisheyeCursor({
     const target = { x: -9999, y: -9999 };
     const current = { x: -9999, y: -9999 };
     let moved = false;
-    let lastEncoded = "";
     let raf = 0;
+    // Quantized map-center so we skip the (expensive) rebuild + PNG encode
+    // when the lens hasn't moved a visible amount.
+    let lastQx = NaN;
+    let lastQy = NaN;
 
     // Only grid boxes become rectangle [ (grid box) ]; everything else stays circle
     const gridSelector = ".skill-card, .exp-item, .contact-info-card";
@@ -103,7 +106,7 @@ export default function FisheyeCursor({
           moved = true;
           current.x = target.x;
           current.y = target.y;
-          rebuild();
+          rebuild(true);
           updateRing();
         }
       } else if (!shouldRect && prevRect) {
@@ -121,11 +124,18 @@ export default function FisheyeCursor({
 
     const canvas = mapRef.current;
 
-    const rebuild = () => {
+    const rebuild = (force = false) => {
       if (!canvas || !imageRef.current) return;
       const rect = root.getBoundingClientRect();
       const w = Math.max(1, Math.round(rect.width / mapScale));
       const h = Math.max(1, Math.round(rect.height / mapScale));
+
+      const qx = Math.round(current.x / mapScale);
+      const qy = Math.round(current.y / mapScale);
+      if (!force && qx === lastQx && qy === lastQy && canvas.width === w && canvas.height === h) return;
+      lastQx = qx;
+      lastQy = qy;
+
       if (canvas.width !== w) canvas.width = w;
       if (canvas.height !== h) canvas.height = h;
 
@@ -196,11 +206,7 @@ export default function FisheyeCursor({
       }
 
       ctx.putImageData(img, 0, 0);
-      const url = canvas.toDataURL("image/png");
-      if (url !== lastEncoded) {
-        lastEncoded = url;
-        imageRef.current.setAttribute("href", url);
-      }
+      imageRef.current.setAttribute("href", canvas.toDataURL("image/png"));
     };
 
     const updateRing = () => {
@@ -215,8 +221,15 @@ export default function FisheyeCursor({
       // follows the pointer correctly even when the root isn't the viewport
       // (e.g. a FisheyeCursor scoped to the footer).
       const rect = root.getBoundingClientRect();
-      target.x = e.clientX - rect.left;
-      target.y = e.clientY - rect.top;
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      // Only the instance whose section is under the pointer tracks it.
+      // Other instances keep their last lens position and skip the
+      // displacement-map rebuild entirely while their section is offscreen.
+      const m = radius;
+      if (x < -m || x > rect.width + m || y < -m || y > rect.height + m) return;
+      target.x = x;
+      target.y = y;
       // Snap onto the cursor on the first move instead of easing in from
       // the top-left corner on page load.
       if (!moved) {
@@ -224,13 +237,14 @@ export default function FisheyeCursor({
         current.x = target.x;
         current.y = target.y;
         if (ringRef.current) ringRef.current.style.opacity = "1";
-        rebuild();
+        rebuild(true);
         updateRing();
       }
     };
 
     const loop = () => {
       raf = requestAnimationFrame(loop);
+      if (document.hidden) return;
       const dx = target.x - current.x;
       const dy = target.y - current.y;
       if (Math.abs(dx) > 0.02 || Math.abs(dy) > 0.02) {

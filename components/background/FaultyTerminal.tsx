@@ -345,11 +345,17 @@ export default function FaultyTerminal({
   const loadAnimationStartRef = useRef(0);
   const timeOffsetRef = useRef(Math.random() * 100);
 
+  // The terminal shader evaluates dozens of digit taps per pixel — cap the
+  // backing store on touch/small screens where the fullscreen canvas would
+  // otherwise run at 3x phone DPR. Chunky digits hide the difference.
   const effectiveDpr =
     dpr ??
     (typeof window === "undefined"
       ? 1
-      : Math.min(window.devicePixelRatio || 1, 2));
+      : Math.min(
+          window.devicePixelRatio || 1,
+          window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768 ? 1.25 : 2
+        ));
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
 

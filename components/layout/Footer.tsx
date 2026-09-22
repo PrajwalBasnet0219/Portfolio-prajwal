@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { useNav } from "./NavigationGate";
@@ -43,7 +43,9 @@ export default function Footer({ onProjectClick }: FooterProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const columnsRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const glowRef = useRef<HTMLDivElement>(null);
+  const glowTargetRef = useRef({ x: 50, y: 50 });
+  const glowFrameRef = useRef(0);
   const { navigate } = useNav();
   const pathname = usePathname();
 
@@ -100,14 +102,29 @@ export default function Footer({ onProjectClick }: FooterProps) {
     return () => ctx.revert();
   }, []);
 
+  // Update the radial glow directly on the DOM (rAF-throttled) instead of
+  // through state — the footer re-rendering on every mousemove was the main
+  // jank source in the page (GlitchText/ShinyText/GSAP re-render per pointer
+  // event).
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = sectionRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setMousePos({
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top) / rect.height,
-    });
+    if (!rect || rect.width === 0 || rect.height === 0) return;
+    glowTargetRef.current = {
+      x: Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100)),
+      y: Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100)),
+    };
+    if (!glowFrameRef.current) {
+      glowFrameRef.current = requestAnimationFrame(() => {
+        glowFrameRef.current = 0;
+        const el = glowRef.current;
+        if (!el) return;
+        const { x, y } = glowTargetRef.current;
+        el.style.background = `radial-gradient(600px circle at ${x.toFixed(1)}% ${y.toFixed(1)}%, rgba(255,255,255,0.04), transparent 60%)`;
+      });
+    }
   };
+
+  useEffect(() => () => cancelAnimationFrame(glowFrameRef.current), []);
 
   return (
     <footer
@@ -146,9 +163,10 @@ export default function Footer({ onProjectClick }: FooterProps) {
       </div>
 
       <div
+        ref={glowRef}
         className="absolute inset-0 z-[1] pointer-events-none transition-opacity duration-1000"
         style={{
-          background: `radial-gradient(600px circle at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.04), transparent 60%)`,
+          background: "radial-gradient(600px circle at 50% 50%, rgba(255,255,255,0.04), transparent 60%)",
         }}
       />
 
@@ -306,7 +324,7 @@ export default function Footer({ onProjectClick }: FooterProps) {
             color="#bbbbbb"
             shineColor="#ffffff"
             yoyo
-            className="font-mono font-extrabold tracking-[-0.05em] leading-[0.85] whitespace-nowrap text-[clamp(2.4rem,8.5vw,8.5rem)]"
+            className="font-mono font-extrabold tracking-[-0.05em] leading-[0.85] whitespace-nowrap text-[clamp(1.9rem,8.5vw,8.5rem)]"
           />
         </div>
       </div>

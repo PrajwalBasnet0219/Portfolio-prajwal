@@ -205,6 +205,20 @@ const buildPalette = (colors: string[]): number[][] => {
   return padded;
 };
 
+// Palette is static per color-set — cache it so the render loop doesn't
+// allocate Color objects every frame.
+const paletteCache = new Map<string, number[][]>();
+const getCachedPalette = (colors: string[]): number[][] => {
+  const key = colors.join(',');
+  let palette = paletteCache.get(key);
+  if (!palette) {
+    palette = buildPalette(colors);
+    if (paletteCache.size > 8) paletteCache.clear();
+    paletteCache.set(key, palette);
+  }
+  return palette;
+};
+
 export default function Strands({
   colors = ['#FF4242', '#7C3AED', '#06B6D4', '#EAB308'],
   count = 3,
@@ -277,7 +291,10 @@ export default function Strands({
     const renderer = new Renderer({
       alpha: true,
       premultipliedAlpha: true,
-      antialias: true
+      antialias: true,
+      // OGL defaults to full device DPR — cap it, strands stay smooth
+      // while fullscreen canvases stop melting phone GPUs.
+      dpr: Math.min(window.devicePixelRatio || 1, 1.5)
     });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
@@ -296,7 +313,7 @@ export default function Strands({
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: [ctn.offsetWidth, ctn.offsetHeight] },
-        uColors: { value: buildPalette(propsRef.current.colors) },
+        uColors: { value: getCachedPalette(propsRef.current.colors) },
         uColorCount: { value: Math.min(propsRef.current.colors.length, MAX_COLORS) },
         uStrandCount: { value: Math.min(propsRef.current.count, MAX_STRANDS) },
         uSpeed: { value: speed },
@@ -350,12 +367,23 @@ export default function Strands({
     resizeObserver.observe(ctn);
     resize();
 
+    // Pause the render loop when this section is offscreen or the tab is
+    // hidden — otherwise the canvas keeps burning GPU/CPU behind other
+    // sections (e.g. the footer strands while reading the hero).
+    let inView = true;
+    const io = new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; }, { threshold: 0, rootMargin: "100px" });
+    io.observe(ctn);
+
+    const t0 = performance.now();
     let animateId = 0;
     const update = (t: number) => {
       animateId = requestAnimationFrame(update);
+      if (!inView || document.hidden) return;
       const current = propsRef.current;
-      program.uniforms.uTime.value = t * 0.001;
-      program.uniforms.uColors.value = buildPalette(current.colors);
+      // Elapsed time since mount (continuous across pauses) so the wave
+      // phase doesn't jump when the loop resumes.
+      program.uniforms.uTime.value = (t - t0) * 0.001;
+      program.uniforms.uColors.value = getCachedPalette(current.colors);
       program.uniforms.uColorCount.value = Math.min(current.colors.length, MAX_COLORS);
       program.uniforms.uStrandCount.value = Math.min(Math.max(Math.round(current.count), 1), MAX_STRANDS);
       program.uniforms.uSpeed.value = current.speed;
@@ -388,6 +416,7 @@ export default function Strands({
       cancelAnimationFrame(animateId);
       window.removeEventListener('resize', resize);
       resizeObserver.disconnect();
+      io.disconnect();
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);
       }

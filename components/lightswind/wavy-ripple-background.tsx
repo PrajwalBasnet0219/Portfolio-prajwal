@@ -122,18 +122,18 @@ export default function WavyRippleBackground({
     const geometry = new Triangle(gl);
     if (geometry.attributes.uv) delete geometry.attributes.uv;
 
+    // Convert once — the effect re-runs when props change, so there is no
+    // need to re-create the Color on every frame.
+    const wave = new Color(waveColor);
+    const waveRgb: [number, number, number] = [wave.r, wave.g, wave.b];
+
     const program = new Program(gl, {
       vertex: VERTEX_SHADER,
       fragment: FRAGMENT_SHADER,
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: [container.offsetWidth, container.offsetHeight] },
-        uWaveColor: {
-          value: (() => {
-            const c = new Color(waveColor);
-            return [c.r, c.g, c.b];
-          })(),
-        },
+        uWaveColor: { value: waveRgb },
         uSpeed: { value: speed },
         uFrequency: { value: frequency },
         uScale: { value: ringSharpness },
@@ -162,14 +162,6 @@ export default function WavyRippleBackground({
       animationId = requestAnimationFrame(animate);
       if (!isVisible || document.hidden) return;
       program.uniforms.uTime.value = time * 0.001;
-      program.uniforms.uWaveColor.value = (() => {
-        const c = new Color(waveColor);
-        return [c.r, c.g, c.b];
-      })();
-      program.uniforms.uSpeed.value = speed;
-      program.uniforms.uFrequency.value = frequency;
-      program.uniforms.uScale.value = ringSharpness;
-      program.uniforms.uMaxOpacity.value = maxOpacity;
 
       renderer.render({ scene: mesh });
     };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navigation from "@/components/layout/Navigation";
 import NavigationGate from "@/components/layout/NavigationGate";
 import ShutterLoader from "@/components/loading/ShutterLoader";
+import IntroScrollLock from "@/components/layout/IntroScrollLock";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className="antialiased">
         <ShutterLoader />
+        <IntroScrollLock />
         <NavigationGate>
           <Navigation />
           {children}

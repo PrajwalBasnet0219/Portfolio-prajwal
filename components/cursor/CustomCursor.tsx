@@ -105,6 +105,13 @@ export default function CustomCursor() {
       el.addEventListener("mouseleave", onMouseLeaveInteractive);
     });
 
+    // Start from the screen center (not 0,0) so the ring doesn't fly in from
+    // the top-left corner on mount; the first real pointermove re-targets it.
+    const startX = window.innerWidth / 2;
+    const startY = window.innerHeight / 2;
+    targetRef.current = { x: startX, y: startY };
+    posRef.current = { x: startX, y: startY };
+
     let rafId: number;
     const animate = () => {
       // dot always follows cursor (snappy)

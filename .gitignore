@@ -1,6 +1,11 @@
 node_modules
 .next
 .vercel
+dist
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 .env*
+!.env.example
 .env.local
 .vscode
+*.log

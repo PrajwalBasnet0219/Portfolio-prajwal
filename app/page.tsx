@@ -7,7 +7,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CustomCursor from "@/components/cursor/CustomCursor";
 import NoiseOverlay from "@/components/background/NoiseOverlay";
-import Navigation from "@/components/layout/Navigation";
 import Hero from "@/components/hero/Hero";
 import { useNav } from "@/components/layout/NavigationGate";
 
@@ -25,6 +24,7 @@ const SectionFallback = () => (
 
 export default function Home() {
   const lenisRef = useRef<Lenis | null>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const { navigate } = useNav();
 
   useEffect(() => {
@@ -47,16 +47,17 @@ export default function Home() {
       gsap.ticker.lagSmoothing(0);
     }
 
-    // Slide-up + blur-to-clear on scroll for main sections
+    // Slide-up on scroll for main sections.
+    // Transform + opacity only (compositor-friendly) — no per-frame blur()
+    // filter over 100vh+ sections containing WebGL canvases.
     const reveals = gsap.utils.toArray<HTMLElement>(".reveal");
     reveals.forEach((el) => {
       gsap.fromTo(
         el,
-        { y: 80, autoAlpha: 0, filter: "blur(10px)" },
+        { y: 80, autoAlpha: 0 },
         {
           y: 0,
           autoAlpha: 1,
-          filter: "blur(0px)",
           duration: 1.1,
           ease: "power3.out",
           scrollTrigger: {
@@ -68,7 +69,24 @@ export default function Home() {
       );
     });
 
+    // The About/Project/Footer sections are lazily imported inside .reveal
+    // wrappers. When their chunks mount the wrapper height changes (the
+    // 100vh fallback → real content), which moves every trigger position.
+    // Refresh once the content settles so sections reveal at the right spot.
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const refreshTriggers = () => {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+    };
+    const main = mainRef.current;
+    const ro = main ? new ResizeObserver(refreshTriggers) : undefined;
+    if (main && ro) ro.observe(main);
+    // Initial refresh for when the first chunk has already resolved.
+    refreshTriggers();
+
     return () => {
+      clearTimeout(refreshTimer);
+      ro?.disconnect();
       if (lenis) {
         gsap.ticker.remove(ticker);
         lenis.destroy();
@@ -81,10 +99,9 @@ export default function Home() {
 
   return (
     <>
-      <main className="relative min-h-screen bg-void">
+      <main ref={mainRef} className="relative min-h-screen bg-void">
         <CustomCursor />
         <NoiseOverlay />
-        <Navigation />
         <div className="scanline" />
         <Hero />
         <div className="reveal">

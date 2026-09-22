@@ -77,7 +77,7 @@ export default function Navigation() {
         {"</>"}
       </Link>
 
-      <div className="flex items-center gap-6 md:gap-10">
+      <div className="flex items-center gap-4 sm:gap-6 md:gap-10">
         {navItems.map((item) => (
           <a
             key={item.label}

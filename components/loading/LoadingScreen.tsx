@@ -4,10 +4,13 @@ import { useEffect, useRef, useState, useCallback, useId } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import gsap from "gsap";
 import styles from "./LoadingScreen.module.css";
+import SolvingOrb from "../effects/SolvingOrb";
 
 const GLITCH_CHARS = "▓▒░█▄▀■□▪▫◊◦●○◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯";
-const MAX_PERCENT = 100;
 const FISHEYE_MAX = 110;
+// Session memo: once a real probe has completed, repeat navigations skip
+// re-downloading the probe asset and ramp from the known-good link instead.
+let sessionProbeWarmed = false;
 
 type Stage = "notice" | "loading" | "progress" | "complete";
 
@@ -30,13 +33,35 @@ export default function LoadingScreen({
   const filterRef = useRef<SVGFEDisplacementMapElement>(null);
   const [stage, setStage] = useState<Stage>("notice");
   const [subText, setSubText] = useState("");
-  const [percent, setPercent] = useState(0);
   const [visible, setVisible] = useState(true);
-  const [glitchOffset, setGlitchOffset] = useState({ x: 0, y: 0 });
+  // Real loading progress (0..1) driven by the network probe below.
+  const [progress, setProgress] = useState(0);
+  const progressRef = useRef(0);
+  // Link info shown in the status line (from the Network Information API).
+  const [linkLabel, setLinkLabel] = useState("UNKNOWN LINK");
+  const [speedLabel, setSpeedLabel] = useState("--");
+  const mountTimeRef = useRef(0);
+  const scrambleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasNavigated = useRef(false);
   const hasFadedOut = useRef(false);
   const [animDone, setAnimDone] = useState(false);
-  const iconRef = useRef<HTMLDivElement>(null);
+
+  const setProgressSafe = useCallback((v: number) => {
+    const clamped = Math.max(progressRef.current, Math.min(1, v));
+    progressRef.current = clamped;
+    setProgress(clamped);
+  }, []);
+  // Shrink the orb on narrow screens so it never crowds the text.
+  const [orbSize, setOrbSize] = useState(132);
+  useEffect(() => {
+    const fit = () => {
+      const w = window.innerWidth;
+      setOrbSize(w < 380 ? 100 : w < 640 ? 116 : 132);
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
   const rawId = useId();
@@ -93,11 +118,27 @@ export default function LoadingScreen({
     img.setAttribute("href", canvas.toDataURL("image/png"));
   }, []);
 
+  // Guards async stage-machine callbacks so unmounting mid-sequence
+  // (navigation completing) never fires setState on an unmounted screen.
+  // Reset on mount so StrictMode remounts (dev) can't leave it stuck false.
+  const aliveRef = useRef(true);
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+      if (scrambleTimerRef.current) clearInterval(scrambleTimerRef.current);
+    };
+  }, []);
+
   const scrambleText = useCallback((targetStr: string, onComplete: () => void) => {
     let iteration = 0;
     const totalIterations = 25;
 
     const interval = setInterval(() => {
+      if (!aliveRef.current) {
+        clearInterval(interval);
+        return;
+      }
       const progress = iteration / totalIterations;
 
       const scrambled = targetStr
@@ -116,22 +157,159 @@ export default function LoadingScreen({
 
       if (iteration > totalIterations) {
         clearInterval(interval);
+        scrambleTimerRef.current = null;
+        if (!aliveRef.current) return;
         setSubText(targetStr);
         onComplete();
       }
     }, 40);
+    scrambleTimerRef.current = interval;
   }, []);
 
-  // Stage machine: NOTICE -> scramble "ATTEMPTING TO LOAD.." -> COMPLETE (fast, no 0-100%)
+  // Stage machine: NOTICE -> scramble "ATTEMPTING TO LOAD.." while the
+  // network probe measures the real link. Completion (LOADED + fade) is
+  // driven by measured progress, not timers — see the probe effect below.
   useEffect(() => {
     const noticeTimer = setTimeout(() => {
+      if (!aliveRef.current) return;
       setStage("loading");
       const targetText = `ATTEMPTING TO LOAD ${pageLabel} PAGE...`;
       scrambleText(targetText, () => {
-        setTimeout(() => {
-          setSubText(`${pageLabel} PAGE LOADED`);
-          setStage("complete");
+        // Text settles; the probe decides when we actually advance.
+      });
+    }, 700);
+
+    return () => clearTimeout(noticeTimer);
+  }, [pageLabel, scrambleText]);
+
+  // Real loading probe: downloads a representative asset byte-by-byte so
+  // the bar follows actual throughput (slow wifi = honest slow bar, cached
+  // revisit = instant). Falls back to timed completion if the probe stalls.
+  // Warmed once per session — repeat navigations reuse the known-good link
+  // with a fast ramp instead of re-downloading the probe asset every time.
+  useEffect(() => {
+    mountTimeRef.current = performance.now();
+    const conn = (navigator as unknown as {
+      connection?: { effectiveType?: string; downlink?: number; saveData?: boolean };
+    }).connection;
+    if (conn?.effectiveType) {
+      const type = conn.effectiveType.toUpperCase().replace("-", " ");
+      setLinkLabel(conn.saveData ? `${type} · SAVE DATA` : `${type}`);
+    } else {
+      setLinkLabel("UNKNOWN LINK");
+    }
+
+    // Repeat visits: the link is already measured — ramp quickly instead of
+    // fetching the probe asset on every single navigation.
+    if (sessionProbeWarmed) {
+      setSpeedLabel("CACHED");
+      const ramp = setInterval(() => {
+        if (!aliveRef.current) {
+          clearInterval(ramp);
+          return;
+        }
+        if (progressRef.current >= 1) {
+          clearInterval(ramp);
+          return;
+        }
+        setProgressSafe(progressRef.current + 0.07);
+      }, 90);
+      const failsafe = setTimeout(() => {
+        clearInterval(ramp);
+        if (aliveRef.current) setProgressSafe(1);
+      }, 5000);
+      return () => {
+        clearInterval(ramp);
+        clearTimeout(failsafe);
+      };
+    }
+
+    const ctrl = new AbortController();
+    const failsafe = setTimeout(() => {
+      ctrl.abort();
+      if (aliveRef.current) setProgressSafe(1);
+    }, 8000);
+
+    (async () => {
+      try {
+        const res = await fetch("/img/p1.png", { signal: ctrl.signal });
+        const total = Number(res.headers.get("content-length")) || 0;
+        const reader = res.body?.getReader();
+        if (!reader) {
+          if (aliveRef.current) setProgressSafe(1);
+          return;
+        }
+        let loaded = 0;
+        const t0 = performance.now();
+        let lastSpeedAt = 0;
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          loaded += value.byteLength;
+          const nowMs = performance.now();
+          const dt = (nowMs - t0) / 1000;
+          // Throttled readout (4×/s max) in megabytes/sec — no render storm.
+          if (dt > 0.2 && nowMs - lastSpeedAt > 250 && aliveRef.current) {
+            lastSpeedAt = nowMs;
+            const mbs = (loaded / dt / 1e6).toFixed(1);
+            setSpeedLabel(`${mbs} MB/S`);
+          }
+          if (!aliveRef.current) return;
+          if (total > 0) setProgressSafe(0.05 + 0.8 * (loaded / total));
+          else setProgressSafe(0.05 + Math.min(0.8, (loaded / 500000) * 0.8));
+        }
+        sessionProbeWarmed = true;
+        if (!aliveRef.current) return;
+        setProgressSafe(0.9);
+        // Gate the last stretch on the document actually being ready
+        // (initial loads), capped so a stalled parser can't hang us.
+        if (document.readyState !== "complete") {
+          await new Promise<void>((resolve) => {
+            if (document.readyState === "complete") return resolve();
+            window.addEventListener("load", () => resolve(), { once: true });
+            setTimeout(() => resolve(), 4000);
+          });
+        }
+        try {
+          await document.fonts.ready;
+        } catch {
+          /* fonts are decorative — never block on them */
+        }
+        if (aliveRef.current) setProgressSafe(1);
+      } catch {
+        // Aborted, offline, or probe failed — fall back to timed completion.
+        if (aliveRef.current) setProgressSafe(1);
+      } finally {
+        clearTimeout(failsafe);
+      }
+    })();
+
+    return () => {
+      ctrl.abort();
+      clearTimeout(failsafe);
+    };
+  }, [setProgressSafe]);
+
+  // Completion: once measured progress hits 100% (and the screen has been
+  // up long enough to read), stop any running scramble and run the LOADED
+  // sequence. The existing fade still waits for the route to mount.
+  useEffect(() => {
+    if (progress < 1) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const elapsed = performance.now() - (mountTimeRef.current || performance.now());
+    const wait = 350 + Math.max(0, 2200 - elapsed);
+    timers.push(
+      setTimeout(() => {
+        if (!aliveRef.current) return;
+        if (scrambleTimerRef.current) {
+          clearInterval(scrambleTimerRef.current);
+          scrambleTimerRef.current = null;
+        }
+        setSubText(`${pageLabel} PAGE LOADED`);
+        setStage("complete");
+        timers.push(
           setTimeout(() => {
+            if (!aliveRef.current) return;
             if (!hasNavigated.current) {
               hasNavigated.current = true;
               setAnimDone(true);
@@ -139,13 +317,12 @@ export default function LoadingScreen({
                 router.push(target);
               }
             }
-          }, 700);
-        }, 350);
-      });
-    }, 700);
-
-    return () => clearTimeout(noticeTimer);
-  }, [pageLabel, target, router, autoNavigate, scrambleText]);
+          }, 700)
+        );
+      }, wait)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [progress, pageLabel, target, router, autoNavigate]);
 
   // Fisheye intro only: on entry the lens is big and settles to neutral.
   // No outro — the screen just fades out with a blur before the reveal.
@@ -169,26 +346,9 @@ export default function LoadingScreen({
     };
   }, [stage]);
 
-  // Icon glitch effect
-  useEffect(() => {
-    const glitchIcon = () => {
-      const offsetX = (Math.random() - 0.5) * 6;
-      const offsetY = (Math.random() - 0.5) * 3;
-      setGlitchOffset({ x: offsetX, y: offsetY });
-
-      setTimeout(() => {
-        setGlitchOffset({ x: 0, y: 0 });
-      }, 60 + Math.random() * 100);
-    };
-
-    const interval = setInterval(() => {
-      glitchIcon();
-    }, 2000 + Math.random() * 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Canvas background
+  // Canvas background — monochrome "window glitch" theme: faint static most
+  // of the time, interrupted by brief bursts of slice tearing, block
+  // artifacts, vertical roll and invert flashes, like a corrupted feed.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -196,18 +356,31 @@ export default function LoadingScreen({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    // Cap backing store DPR: identical look, far cheaper on 3x phones.
+    // CSS (w-full h-full) stretches it to the viewport.
+    const bdpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    let width = Math.max(1, Math.round(window.innerWidth * bdpr));
+    let height = Math.max(1, Math.round(window.innerHeight * bdpr));
     canvas.width = width;
     canvas.height = height;
 
     let frameId: number;
+    let burstUntil = 0;
+    let nextBurst = performance.now() + 1000 + Math.random() * 1800;
 
     const draw = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      const now = performance.now();
+      if (now >= nextBurst) {
+        burstUntil = now + 150 + Math.random() * 280;
+        const gap = burstUntil - now + (Math.random() > 0.62 ? 80 + Math.random() * 130 : 1200 + Math.random() * 2800);
+        nextBurst = now + gap;
+      }
+      const bursting = now < burstUntil;
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
       ctx.fillRect(0, 0, width, height);
 
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 18; i++) {
         const x = Math.random() * width;
         const y = Math.random() * height;
         const w = Math.random() * 100 + 20;
@@ -217,9 +390,37 @@ export default function LoadingScreen({
         ctx.fillRect(x, y, w, h);
       }
 
-      if (Math.random() > 0.95) {
+      if (bursting) {
+        // Horizontal slice tearing — shifted strips of the frame itself.
+        const slices = 6 + Math.floor(Math.random() * 9);
+        for (let i = 0; i < slices; i++) {
+          const sy = Math.random() * height;
+          const sh = 2 + Math.random() * 16;
+          const dx = (Math.random() - 0.5) * (30 + Math.random() * 90);
+          ctx.drawImage(canvas, 0, sy, width, sh, dx, sy, width, sh);
+        }
+
+        // Block artifacts.
+        for (let i = 0; i < 3; i++) {
+          const bw = 20 + Math.random() * 90;
+          const bh = 4 + Math.random() * 18;
+          const bx = Math.random() * width;
+          const by = Math.random() * height;
+          ctx.fillStyle = Math.random() > 0.5
+            ? `rgba(0, 0, 0, ${0.5 + Math.random() * 0.5})`
+            : `rgba(200, 200, 200, ${0.08 + Math.random() * 0.15})`;
+          ctx.fillRect(bx, by, bw, bh);
+        }
+
+        // Vertical roll.
+        if (Math.random() > 0.72) {
+          const dy = (Math.random() - 0.5) * 36;
+          ctx.drawImage(canvas, 0, 0, width, height, 0, dy, width, height);
+        }
+      } else if (Math.random() > 0.96) {
+        // Rare faint tear line between bursts.
         const sy = Math.random() * height;
-        ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.03})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.05})`;
         ctx.fillRect(0, sy, width, 1);
       }
 
@@ -229,8 +430,9 @@ export default function LoadingScreen({
     draw();
 
     const handleResize = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
+      const d = Math.min(window.devicePixelRatio || 1, 1.5);
+      width = Math.max(1, Math.round(window.innerWidth * d));
+      height = Math.max(1, Math.round(window.innerHeight * d));
       canvas.width = width;
       canvas.height = height;
     };
@@ -245,24 +447,29 @@ export default function LoadingScreen({
   // Only fade the screen out once the animation finished AND the destination
   // page has actually mounted (pathname changed), then unmount.
   useEffect(() => {
-    if (animDone && pathname === target && !hasFadedOut.current) {
-      hasFadedOut.current = true;
-      setVisible(false);
-      setTimeout(() => onComplete?.(), 600);
-    }
+    if (!(animDone && pathname === target && !hasFadedOut.current)) return;
+    hasFadedOut.current = true;
+    setVisible(false);
+    const id = setTimeout(() => onComplete?.(), 600);
+    return () => clearTimeout(id);
   }, [animDone, pathname, target, onComplete]);
 
   const statusLabel =
     stage === "notice"
       ? "SYSTEM NOTICE"
       : stage === "loading"
-        ? "PROCESSING"
+        ? `${linkLabel} · ${speedLabel} · ${Math.round(progress * 100)}%`
         : stage === "progress"
           ? "LOADING"
           : "COMPLETE";
 
   return (
     <div
+      role="progressbar"
+      aria-label={`Loading ${pageLabel} page`}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(progress * 100)}
       className="fixed inset-0 bg-void z-[100] flex flex-col items-center justify-center"
       style={{
         opacity: visible ? 1 : 0,
@@ -303,72 +510,26 @@ export default function LoadingScreen({
       </svg>
       <canvas ref={mapCanvasRef} className="hidden" aria-hidden />
 
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+      {/* Dense scanlines — the analog-static theme */}
+      <div className={styles.staticLines} aria-hidden />
 
       {/* Everything inside this wrapper gets the fisheye lens applied. */}
       <div
         className="absolute inset-0 flex flex-col items-center justify-center"
         style={{ filter: `url(#${filterId})` }}
       >
-        <div
-          ref={iconRef}
-          className="relative mb-8"
-          style={{
-            transform: `translate(${glitchOffset.x}px, ${glitchOffset.y}px)`,
-            transition: "transform 0.05s ease-out",
-          }}
-        >
-          <svg
-            width="120"
-            height="104"
-            viewBox="0 0 120 104"
-            fill="none"
-            className="drop-shadow-[0_0_30px_rgba(200,50,50,0.3)]"
-          >
-            <path
-              d="M60 8L112 96H8L60 8Z"
-              stroke="#c43030"
-              strokeWidth="3"
-              fill="rgba(196,48,48,0.08)"
-            />
-            <path
-              d="M60 16L104 92H16L60 16Z"
-              stroke="rgba(196,48,48,0.3)"
-              strokeWidth="1"
-              fill="none"
-            />
-            <rect x="56" y="36" width="8" height="32" fill="#c43030" rx="1" />
-            <circle cx="60" cy="82" r="4" fill="#c43030" />
-          </svg>
-
-          <svg
-            width="120"
-            height="104"
-            viewBox="0 0 120 104"
-            fill="none"
-            className="absolute inset-0 opacity-30"
-            style={{
-              transform: `translate(${glitchOffset.x * 2}px, ${glitchOffset.y * 2}px)`,
-            }}
-          >
-            <path
-              d="M60 8L112 96H8L60 8Z"
-              stroke="#ff4444"
-              strokeWidth="2"
-              fill="none"
-            />
-            <rect x="56" y="36" width="8" height="32" fill="#ff4444" rx="1" />
-            <circle cx="60" cy="82" r="4" fill="#ff4444" />
-          </svg>
+        <div className="relative mb-6 md:mb-8" style={{ filter: "drop-shadow(0 0 24px rgba(255,255,255,0.12))" }}>
+          <SolvingOrb size={orbSize} />
         </div>
 
-          <div className="text-center">
+          <div className="text-center px-4">
             {stage === "notice" ? (
               <h1
-                className={styles.notice}
+                className={`${styles.notice} ${styles.rgbSplit}`}
                 data-text="NOTICE"
                 style={{
-                  fontSize: "clamp(2.5rem, 6vw, 4rem)",
+                  fontSize: "clamp(2rem, 11vw, 4rem)",
                   fontFamily: "'Courier New', monospace",
                 }}
               >
@@ -376,8 +537,8 @@ export default function LoadingScreen({
               </h1>
             ) : (
               <p
-                className="text-base md:text-lg tracking-[0.25em] text-white uppercase font-mono"
-                style={{ minHeight: "1.5em", textShadow: "0 0 12px rgba(255,255,255,0.25)" }}
+                className={`text-sm md:text-lg tracking-[0.12em] md:tracking-[0.25em] text-white uppercase max-w-[94vw] break-words ${styles.termText} ${styles.rgbSplitSoft}`}
+                style={{ minHeight: "1.5em" }}
               >
                 {subText}
               </p>
@@ -393,18 +554,18 @@ export default function LoadingScreen({
               opacity: stage === "notice" ? 0.3 : 1,
             }}
           />
-          <span className="text-xs tracking-[0.3em] text-white uppercase font-mono">
+          <span className={`text-[10px] md:text-xs tracking-[0.18em] md:tracking-[0.3em] text-white uppercase text-center max-w-[92vw] ${styles.termText}`}>
             {statusLabel}
           </span>
         </div>
 
         {stage !== "notice" && (
-          <div className="mt-8 w-48 h-px bg-fog/20 relative overflow-hidden">
+          <div className="mt-8 w-48 md:w-64 h-px bg-fog/20 relative overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full bg-red-500/60"
               style={{
-                width: stage === "complete" ? "100%" : "60%",
-                transition: "width 0.3s ease",
+                width: `${Math.round(progress * 100)}%`,
+                transition: "width 0.2s linear",
               }}
             />
           </div>
@@ -416,7 +577,7 @@ export default function LoadingScreen({
       <div className="absolute bottom-8 left-8 w-12 h-12 border-l border-b border-fog/10" />
       <div className="absolute bottom-8 right-8 w-12 h-12 border-r border-b border-fog/10" />
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs tracking-[0.2em] text-white/80 uppercase font-mono">
+      <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-4 text-center whitespace-nowrap text-xs tracking-[0.2em] text-white/80 uppercase ${styles.termText}`}>
         {stage !== "notice" ? "DO NOT INTERRUPT" : ""}
       </div>
     </div>
