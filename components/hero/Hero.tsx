@@ -177,7 +177,7 @@ export default function Hero() {
 
           <h1
             ref={nameRef}
-            className="font-light tracking-[0.08em] md:tracking-[0.14em] text-pure uppercase leading-none whitespace-nowrap text-[clamp(1.75rem,8.5vw,8rem)]"
+            className="font-light tracking-[0.08em] md:tracking-[0.14em] text-pure uppercase leading-[1.05] overflow-hidden text-[clamp(2.75rem,9vw,6rem)]"
             style={{ fontFamily: "'Courier New', monospace", minHeight: "1.15em" }}
           >
             {NAMES[0]}
